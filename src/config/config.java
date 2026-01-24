@@ -1,8 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package config;
 
 import java.sql.Connection;
@@ -24,9 +20,9 @@ public static Connection connectDB() {
         Connection con = null;
         try {
             Class.forName("org.sqlite.JDBC"); // Load the SQLite JDBC driver
-            con = DriverManager.getConnection("jdbc:sqlite:voters.db"); // Establish connection
+            con = DriverManager.getConnection("jdbc:sqlite:deliveries.db"); // Establish connection
             System.out.println("Connection Successful");
-        } catch (Exception e) {
+        } catch (ClassNotFoundException | SQLException e) {
             System.out.println("Connection Failed: " + e);
         }
         return con;
@@ -38,7 +34,7 @@ public static Connection connectDB() {
 
 
 public void addRecord(String sql, Object... values) {
-    try (Connection conn = this.connectDB(); // Use the connectDB method
+    try (Connection conn = config.connectDB(); // Use the connectDB method
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
         // Loop through the values and set them in the prepared statement dynamically
