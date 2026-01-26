@@ -1,5 +1,7 @@
 package main;
 
+import admin.admindashboard;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -75,6 +77,11 @@ public class login extends javax.swing.JFrame {
 
         jLabel3.setForeground(new java.awt.Color(255, 204, 204));
         jLabel3.setText("Log In");
+        jLabel3.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jLabel3MouseClicked(evt);
+            }
+        });
         jPanel2.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 0, 50, 30));
 
         jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 210, 100, 30));
@@ -144,6 +151,18 @@ public class login extends javax.swing.JFrame {
         this.dispose();
                // TODO add your handling code here:
     }//GEN-LAST:event_jLabel6MouseClicked
+
+    private void jLabel3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel3MouseClicked
+      
+        
+        admindashboard admin_dashboardFrame= new admindashboard();
+        admin_dashboardFrame.setVisible(true);
+        this.dispose();
+        
+        
+        
+        
+    }//GEN-LAST:event_jLabel3MouseClicked
 
     /**
      * @param args the command line arguments
