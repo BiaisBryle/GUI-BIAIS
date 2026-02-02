@@ -1,14 +1,32 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package main;
 
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import config.config;
+
 public class register extends javax.swing.JFrame {
+    private javax.swing.JComboBox<String> roleCombo;
 
     public register() {
         initComponents();
+        addRoleSelection();
+    }
+        
+
+    private void addRoleSelection(){
+        JLabel jLabelRole = new javax.swing.JLabel();
+        jLabelRole.setText("User Role:");
+        jPanel1.add(jLabelRole, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 210, -1, 20));
+
+        roleCombo = new javax.swing.JComboBox<>();
+        // Pwede nimo dugangan og "Select Role" para sa validation
+        roleCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Select Role", "Admin", "Worker" }));
+        jPanel1.add(roleCombo, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 210, 90, -1));
+
+        // I-adjust ang buttons paubos
+        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 250, 90, 30));
+        jPanel1.add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 290, -1, -1));
     }
 
     @SuppressWarnings("unchecked")
@@ -130,31 +148,38 @@ public class register extends javax.swing.JFrame {
 
     private void jLabel6MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel6MouseClicked
                                       
-    String fname = jTextField2.getText();
-    String lname = jTextField3.getText();
-    String email = jTextField4.getText();
-    String pass  = jTextField5.getText();
+// 1. Kuhaon ang data gikan sa Form
+        String fname = jTextField2.getText();
+        String lname = jTextField3.getText();
+        String email = jTextField4.getText();
+        String pass  = jTextField5.getText();
+        String role  = roleCombo.getSelectedItem().toString();
 
-    if (fname.isEmpty() || lname.isEmpty() || email.isEmpty() || pass.isEmpty()) {
-        javax.swing.JOptionPane.showMessageDialog(this,
-                "Please fill all fields!");
-        return;
-    }
+        // 2. Validation: Check kung naay kulang
+        if (fname.isEmpty() || lname.isEmpty() || email.isEmpty() || pass.isEmpty() || role.equals("Select Role")) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Palihog kumpletiha ang tanang fields!");
+            return;
+        }
 
-    String sql = "INSERT INTO user (u_name, u_lname, u_email, u_pass) VALUES (?, ?, ?, ?)";
+        // 3. I-setup ang SQL Query (u_id wala giapil kung Auto-Increment sa DB)
+        String sql = "INSERT INTO user (u_name, u_lname, u_email, u_pass, u_role) VALUES (?, ?, ?, ?, ?)";
 
-    config.config conf = new config.config();
-    conf.addRecord(sql, fname, lname, email, pass);
+        // 4. Tawgon ang config para i-save
+        config conf = new config();
+        conf.addRecord(sql, fname, lname, email, pass, role);
 
-    javax.swing.JOptionPane.showMessageDialog(this,
-            "Registration Successful!");
+        // 5. Success Message ug Clear Fields
+        javax.swing.JOptionPane.showMessageDialog(this, "Successfully Registered!");
+        clearFields();
+    }                                    
 
-    jTextField2.setText("");
-    jTextField3.setText("");
-    jTextField4.setText("");
-    jTextField5.setText("");
-
-
+    private void clearFields() {
+        jTextField2.setText("");
+        jTextField3.setText("");
+        jTextField4.setText("");
+        jTextField5.setText("");
+        roleCombo.setSelectedIndex(0);
+    
     }//GEN-LAST:event_jLabel6MouseClicked
 
     private void jLabel8MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel8MouseClicked
@@ -167,7 +192,9 @@ public class register extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
+       java.awt.EventQueue.invokeLater(() -> {
+            new register().setVisible(true);
+        });
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
          * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
@@ -216,4 +243,7 @@ public class register extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField4;
     private javax.swing.JTextField jTextField5;
     // End of variables declaration//GEN-END:variables
-}
+
+ //To change body of generated methods, choose Tools | Templates.
+    }
+

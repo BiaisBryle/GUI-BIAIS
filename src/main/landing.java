@@ -63,13 +63,11 @@ public class landing extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void loginMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_loginMouseClicked
-        login loginFrame= new login();
-        loginFrame.setVisible(true);
-        this.dispose();
+      
     }//GEN-LAST:event_loginMouseClicked
 
     private void jLabel2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel2MouseClicked
-  login loginFrame= new login();
+ login loginFrame= new login();
         loginFrame.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_jLabel2MouseClicked

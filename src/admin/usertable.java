@@ -6,32 +6,41 @@
 package admin;
 
 import config.config;
+import net.proteanit.sql.DbUtils;
+import java.sql.ResultSet;
+import javax.swing.JOptionPane;
 
-/**
- *
- * @author USER6
- */
+
 public class usertable extends javax.swing.JFrame {
 
-    /**
-     * Creates new form user_table
-     */
-    public usertable() {
-        initComponents();
-        dispayuser();
-    }
     
-    void displayUser(){
+
+    public usertable() {
+        initComponents(); 
+        displayUser(); // Tawgon ang function inig load
+    }
+   
+   public  void displayUser(){
         
-        config conf = new config();
-        String sql = "SELECT * FROM user";
-        conf.displayData(sql,usertable);
-        
-        
-        
+   try {
+            config conf = new config();
+            String query = "SELECT u_id, u_name, u_lname, u_email, u_role FROM user";
+            ResultSet rs = conf.getData(query);
+            
+            // Siguroha nga ang 'usertable' mao ang Variable Name sa imong JTable
+            usertable.setModel(DbUtils.resultSetToTableModel(rs));
+            
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
 
-   
+    private void initComponents() {
+      
+    }
+  
+
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -132,39 +141,15 @@ public class usertable extends javax.swing.JFrame {
     /**
      * @param args the command line arguments
      */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(usertable.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(usertable.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(usertable.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(usertable.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new usertable().setVisible(true);
-            }
+  
+     public static void main(String args[]) {
+     
+      java.awt.EventQueue.invokeLater(() -> {
+            new usertable().setVisible(true);
         });
     }
 
+  
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -177,7 +162,5 @@ public class usertable extends javax.swing.JFrame {
     private javax.swing.JTable usertable;
     // End of variables declaration//GEN-END:variables
 
-    private void dispayuser() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+   
 }

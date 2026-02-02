@@ -104,6 +104,10 @@ public void displayData(String sql, javax.swing.JTable table) {
     }
 }
 
+    public ResultSet getData(String query) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
 
 
 }
