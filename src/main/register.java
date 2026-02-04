@@ -1,32 +1,29 @@
 
 package main;
 
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import config.config;
+import javax.swing.JOptionPane;
+
 
 public class register extends javax.swing.JFrame {
-    private javax.swing.JComboBox<String> roleCombo;
+    
+     private javax.swing.JComboBox<String> roleCombo;
 
     public register() {
         initComponents();
         addRoleSelection();
     }
         
+        
 
-    private void addRoleSelection(){
-        JLabel jLabelRole = new javax.swing.JLabel();
+    private void addRoleSelection() {
+    javax.swing.JLabel jLabelRole = new javax.swing.JLabel();
         jLabelRole.setText("User Role:");
         jPanel1.add(jLabelRole, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 210, -1, 20));
 
         roleCombo = new javax.swing.JComboBox<>();
-        // Pwede nimo dugangan og "Select Role" para sa validation
-        roleCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Select Role", "Admin", "Worker" }));
+        roleCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Select Role", "Admin", "Worker"}));
         jPanel1.add(roleCombo, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 210, 90, -1));
-
-        // I-adjust ang buttons paubos
-        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 250, 90, 30));
-        jPanel1.add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 290, -1, -1));
     }
 
     @SuppressWarnings("unchecked")
@@ -94,7 +91,7 @@ public class register extends javax.swing.JFrame {
         });
         jPanel2.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 0, 70, 30));
 
-        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 220, 90, 30));
+        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 240, 90, 30));
 
         jPanel3.setBackground(new java.awt.Color(245, 205, 208));
 
@@ -126,7 +123,7 @@ public class register extends javax.swing.JFrame {
                 jLabel8MouseClicked(evt);
             }
         });
-        jPanel1.add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 260, -1, -1));
+        jPanel1.add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 280, -1, -1));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -147,81 +144,55 @@ public class register extends javax.swing.JFrame {
     }//GEN-LAST:event_jTextField2ActionPerformed
 
     private void jLabel6MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel6MouseClicked
-                                      
-// 1. Kuhaon ang data gikan sa Form
         String fname = jTextField2.getText();
         String lname = jTextField3.getText();
         String email = jTextField4.getText();
         String pass  = jTextField5.getText();
         String role  = roleCombo.getSelectedItem().toString();
 
-        // 2. Validation: Check kung naay kulang
         if (fname.isEmpty() || lname.isEmpty() || email.isEmpty() || pass.isEmpty() || role.equals("Select Role")) {
-            javax.swing.JOptionPane.showMessageDialog(this, "Palihog kumpletiha ang tanang fields!");
+            JOptionPane.showMessageDialog(this, "Please fill all fields!");
             return;
         }
 
-        // 3. I-setup ang SQL Query (u_id wala giapil kung Auto-Increment sa DB)
-        String sql = "INSERT INTO user (u_name, u_lname, u_email, u_pass, u_role) VALUES (?, ?, ?, ?, ?)";
+        try {
+            String sql = "INSERT INTO user (u_name, u_lname, u_email, u_pass,u_status, u_role) VALUES (?,?, ?, ?, ?, ?)";
+            config conf = new config();
+            conf.addRecord(sql, fname, lname, email, pass, "Pending", role);
 
-        // 4. Tawgon ang config para i-save
-        config conf = new config();
-        conf.addRecord(sql, fname, lname, email, pass, role);
+            JOptionPane.showMessageDialog(this, "Registered Successfully!");
+            clearFields();
 
-        // 5. Success Message ug Clear Fields
-        javax.swing.JOptionPane.showMessageDialog(this, "Successfully Registered!");
-        clearFields();
-    }                                    
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Database Error!");
+        }
+    
+    }//GEN-LAST:event_jLabel6MouseClicked
 
-    private void clearFields() {
+      private void clearFields() {
         jTextField2.setText("");
         jTextField3.setText("");
         jTextField4.setText("");
         jTextField5.setText("");
         roleCombo.setSelectedIndex(0);
+    }
     
-    }//GEN-LAST:event_jLabel6MouseClicked
-
+    
+   
     private void jLabel8MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel8MouseClicked
-     login loginFrame= new login();
+     login loginFrame = new login();
         loginFrame.setVisible(true);
         this.dispose();
+    
     }//GEN-LAST:event_jLabel8MouseClicked
 
     /**
      * @param args the command line arguments
      */
-    public static void main(String args[]) {
-       java.awt.EventQueue.invokeLater(() -> {
+   public static void main(String args[]) {
+        java.awt.EventQueue.invokeLater(() -> {
             new register().setVisible(true);
-        });
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(register.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(register.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(register.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(register.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new register().setVisible(true);
-            }
         });
     }
 
@@ -243,6 +214,8 @@ public class register extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField4;
     private javax.swing.JTextField jTextField5;
     // End of variables declaration//GEN-END:variables
+
+    
 
  //To change body of generated methods, choose Tools | Templates.
     }
