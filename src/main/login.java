@@ -7,13 +7,69 @@ import java.sql.ResultSet;
 import javax.swing.JOptionPane;
 import Worker.workerdashboard;
 import admin.admindashboard;
+import java.sql.SQLException;
+import javax.swing.*;
+import java.awt.*;
+import java.sql.*;
+import config.Session;
+
+
 
 
 public class login extends javax.swing.JFrame {
-
     public login() {
         initComponents();
+        this.setLocationRelativeTo(null);
     }
+
+    private void loginUser() {
+        String user_email = email.getText(); 
+        String user_pass = pass.getText();
+
+        if (user_email.isEmpty() || user_pass.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Please fill in all fields!");
+            return;
+        }
+
+        String query = "SELECT * FROM user WHERE u_email = ? AND u_pass = ?";
+
+        try (Connection conn = config.connectDB(); 
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            pstmt.setString(1, user_email);
+            pstmt.setString(2, user_pass);
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    String status = rs.getString("u_status"); 
+                    
+                    if (status.equalsIgnoreCase("Pending")) {
+                        JOptionPane.showMessageDialog(null, "Account Pending. Wait for Admin approval.");
+                    } else {
+                        // SET SESSION DATA
+                        Session sess = Session.getInstance();
+                        sess.setId(rs.getInt("u_id"));
+                        sess.setName(rs.getString("u_name"));
+                        sess.setEmail(rs.getString("u_email"));
+                        sess.setRole(rs.getString("u_role"));
+
+                        if (sess.getRole().equalsIgnoreCase("worker")) {
+                            new workerdashboard().setVisible(true);
+                        } else {
+                            new admindashboard().setVisible(true);
+                        }
+                        this.dispose();
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "Invalid Credentials!");
+                }
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
+        }
+    }
+
+
 
     
     @SuppressWarnings("unchecked")
@@ -48,16 +104,16 @@ public class login extends javax.swing.JFrame {
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                .addContainerGap(106, Short.MAX_VALUE)
+                .addContainerGap(140, Short.MAX_VALUE)
                 .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(91, 91, 91))
+                .addGap(57, 57, 57))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                .addContainerGap(31, Short.MAX_VALUE)
+                .addContainerGap(40, Short.MAX_VALUE)
                 .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(22, 22, 22))
+                .addContainerGap())
         );
 
         jPanel1.add(jPanel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 430, -1));
@@ -79,13 +135,15 @@ public class login extends javax.swing.JFrame {
         });
         jPanel2.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 0, 50, 30));
 
-        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 210, 100, 30));
+        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(320, 270, 110, 30));
 
+        jLabel4.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jLabel4.setText("Email:");
-        jPanel1.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 120, 40, 20));
+        jPanel1.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 170, 50, 30));
 
+        jLabel5.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jLabel5.setText("Password:");
-        jPanel1.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 160, -1, 20));
+        jPanel1.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 220, -1, 20));
 
         jLabel6.setFont(new java.awt.Font("Tahoma", 0, 10)); // NOI18N
         jLabel6.setText("click here to Register");
@@ -95,24 +153,24 @@ public class login extends javax.swing.JFrame {
                 jLabel6MouseClicked(evt);
             }
         });
-        jPanel1.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(260, 250, 100, 20));
+        jPanel1.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(320, 310, 110, 20));
 
         email.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 emailActionPerformed(evt);
             }
         });
-        jPanel1.add(email, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 120, 100, -1));
+        jPanel1.add(email, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 160, 130, 40));
 
         pass.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 passActionPerformed(evt);
             }
         });
-        jPanel1.add(pass, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 160, 100, -1));
+        jPanel1.add(pass, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 210, 130, 40));
 
         jLabel2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/LOGO.PNG"))); // NOI18N
-        jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(-590, -60, 980, 490));
+        jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(-580, -30, 980, 490));
 
         jLabel1.setBackground(new java.awt.Color(255, 255, 255));
         jLabel1.setText("logo");
@@ -122,7 +180,7 @@ public class login extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -150,64 +208,7 @@ public class login extends javax.swing.JFrame {
     }//GEN-LAST:event_jLabel6MouseClicked
 
     private void jLabel3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel3MouseClicked
-         loginUser();
-    }
-
-    private void loginUser() {
-    String userEmail = email.getText();
-    String userPass = pass.getText();
-
-    if (userEmail.isEmpty() || userPass.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Please fill all fields!");
-        return;
-    }
-
-    try {
-        config conf = new config();
-
-        // Step 1: Check if user exists using authenticate method
-        String checkSql = "SELECT * FROM user WHERE u_email=? AND u_pass=?";
-        boolean valid = conf.authenticate(checkSql, userEmail, userPass);
-
-        if (valid) {
-            // Step 2: Get the user's role
-            String roleSql = "SELECT u_role FROM user WHERE u_email=? AND u_pass=?";
-            Connection conn = config.connectDB();
-            PreparedStatement pstmt = conn.prepareStatement(roleSql);
-            pstmt.setString(1, userEmail);
-            pstmt.setString(2, userPass);
-            ResultSet rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                String role = rs.getString("u_role");
-
-                if (role.equalsIgnoreCase("Admin")) {
-         
-                    new admindashboard().setVisible(true);
-                    this.dispose();
-                } else if (role.equalsIgnoreCase("Worker")) {
-
-                    new workerdashboard().setVisible(true);
-                    this.dispose();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Unknown role!");
-                }
-            }
-
-            // Close resources
-            rs.close();
-            pstmt.close();
-            conn.close();
-
-        } else {
-            JOptionPane.showMessageDialog(this, "Invalid Email or Password!");
-        }
-
-    } catch (Exception e) {
-        e.printStackTrace();
-        JOptionPane.showMessageDialog(this, "Database Error!");
-    }
-
+  loginUser();
 
     }//GEN-LAST:event_jLabel3MouseClicked
 
@@ -219,7 +220,7 @@ public class login extends javax.swing.JFrame {
      * @param args the command line arguments
      */
    public static void main(String args[]) {
-        java.awt.EventQueue.invokeLater(() -> new login().setVisible(true));
+   java.awt.EventQueue.invokeLater(() -> new login().setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -236,4 +237,7 @@ public class login extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel4;
     private javax.swing.JTextField pass;
     // End of variables declaration//GEN-END:variables
+
+  
+
 }

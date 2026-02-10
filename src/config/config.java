@@ -104,14 +104,14 @@ public void displayData(String sql, javax.swing.JTable table) {
     }
 }
 
-    public ResultSet getData(String query) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+   public ResultSet getData(String sql, Object... values) throws SQLException {
+    Connection conn = connectDB();
+    PreparedStatement pstmt = conn.prepareStatement(sql);
+    for (int i = 0; i < values.length; i++) {
+        pstmt.setObject(i + 1, values[i]);
     }
-
-    public ResultSet getData(String sql, String userEmail, String userPass) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
+    return pstmt.executeQuery();
+}
 
 
 }
