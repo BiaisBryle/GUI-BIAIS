@@ -3,14 +3,13 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/mariel/OneDrive/Desktop/GUI-BIAIS/src/main/login.java</file>
-            <file>file:/C:/Users/mariel/OneDrive/Desktop/GUI-BIAIS/src/admin/profile.java</file>
-            <file>file:/C:/Users/mariel/OneDrive/Desktop/GUI-BIAIS/src/Worker/workerdashboard.java</file>
-            <file>file:/C:/Users/mariel/OneDrive/Desktop/GUI-BIAIS/src/Worker/wprofile.java</file>
+            <file>file:/C:/Users/mariel/OneDrive/Desktop/GUI-BIAIS/src/admin/addorders.java</file>
+            <file>file:/C:/Users/mariel/OneDrive/Desktop/GUI-BIAIS/src/admin/orders.java</file>
+            <file>file:/C:/Users/mariel/OneDrive/Desktop/GUI-BIAIS/src/main/landing.java</file>
             <file>file:/C:/Users/mariel/OneDrive/Desktop/GUI-BIAIS/src/config/Session.java</file>
             <file>file:/C:/Users/mariel/OneDrive/Desktop/GUI-BIAIS/src/admin/admindashboard.java</file>
+            <file>file:/C:/Users/mariel/OneDrive/Desktop/GUI-BIAIS/src/admin/updateform.java</file>
             <file>file:/C:/Users/mariel/OneDrive/Desktop/GUI-BIAIS/src/admin/usertable.java</file>
-            <file>file:/C:/Users/mariel/OneDrive/Desktop/GUI-BIAIS/src/config/config.java</file>
         </group>
     </open-files>
 </project-private>

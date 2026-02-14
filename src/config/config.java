@@ -123,5 +123,23 @@ public void addRecord(String sql, Object... values) {
     return pstmt.executeQuery();
 }
 
-
+public boolean isEmailExisting(String email, String currentID) {
+    // Gamita ang 'connectDB()' kay mao nay naa sa imong code sa taas
+    try (Connection conn = connectDB(); 
+         PreparedStatement pst = conn.prepareStatement("SELECT COUNT(*) FROM user WHERE u_email = ? AND u_id != ?")) {
+        
+        pst.setString(1, email);
+        // Kon ang currentID kay null (sa ADD mode), butangan nato og default value nga dili mo-match sa database
+        pst.setString(2, (currentID == null) ? "" : currentID);
+        
+        try (ResultSet rs = pst.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        }
+    } catch (SQLException e) {
+        System.out.println("Validation Error: " + e.getMessage());
+    }
+    return false;
+}
 }

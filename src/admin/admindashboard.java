@@ -30,6 +30,7 @@ public admindashboard() {
         profile = new javax.swing.JButton();
         logout = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
+        orders = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -46,7 +47,7 @@ public admindashboard() {
                 homeActionPerformed(evt);
             }
         });
-        jPanel1.add(home, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 100, 110, 50));
+        jPanel1.add(home, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 60, 110, 50));
 
         userstable.setBackground(new java.awt.Color(153, 153, 153));
         userstable.setText("USERS");
@@ -55,7 +56,7 @@ public admindashboard() {
                 userstableActionPerformed(evt);
             }
         });
-        jPanel1.add(userstable, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 170, 110, 50));
+        jPanel1.add(userstable, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 120, 110, 50));
 
         profile.setBackground(new java.awt.Color(153, 153, 153));
         profile.setText("PROFILE");
@@ -64,7 +65,7 @@ public admindashboard() {
                 profileActionPerformed(evt);
             }
         });
-        jPanel1.add(profile, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 240, 110, 50));
+        jPanel1.add(profile, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 190, 110, 50));
 
         logout.setBackground(new java.awt.Color(153, 153, 153));
         logout.setText("LOG OUT");
@@ -73,10 +74,19 @@ public admindashboard() {
                 logoutActionPerformed(evt);
             }
         });
-        jPanel1.add(logout, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 310, 110, 50));
+        jPanel1.add(logout, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 320, 110, 50));
 
         jLabel2.setFont(new java.awt.Font("Tahoma", 0, 36)); // NOI18N
         jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 10, 350, 50));
+
+        orders.setBackground(new java.awt.Color(153, 153, 153));
+        orders.setText("ORDERS");
+        orders.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ordersActionPerformed(evt);
+            }
+        });
+        jPanel1.add(orders, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 260, 110, 50));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -120,6 +130,10 @@ public admindashboard() {
     
     }//GEN-LAST:event_profileActionPerformed
 
+    private void ordersActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ordersActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_ordersActionPerformed
+
    
     public static void main(String args[]) {
     
@@ -135,6 +149,7 @@ public admindashboard() {
     private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JButton logout;
+    private javax.swing.JButton orders;
     private javax.swing.JButton profile;
     private javax.swing.JButton userstable;
     // End of variables declaration//GEN-END:variables

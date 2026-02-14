@@ -23,14 +23,18 @@ public class usertable extends javax.swing.JFrame {
     
    void displayUser(String searchTerm) {
 
-   try {
+   
+        try {
+        // Gidugangan nato ang u_role ug u_status sa WHERE clause
         String sql = "SELECT u_id, u_name, u_lname, u_email, u_role, u_status, u_address, u_gender FROM user "
                    + "WHERE u_name LIKE '%" + searchTerm + "%' "
                    + "OR u_lname LIKE '%" + searchTerm + "%' "
-                   + "OR u_email LIKE '%" + searchTerm + "%'";
-                   
-        config conf = new config(); // Create instance
-        conf.displayData(sql, usertable); // Call via instance
+                   + "OR u_email LIKE '%" + searchTerm + "%' "
+                   + "OR u_role LIKE '%" + searchTerm + "%' " 
+                   + "OR u_status LIKE '%" + searchTerm + "%'";
+
+        config conf = new config(); 
+        conf.displayData(sql, usertable); 
 
         if (usertable.getColumnCount() >= 8) {
             usertable.getColumnModel().getColumn(6).setMinWidth(0);
@@ -61,6 +65,7 @@ public class usertable extends javax.swing.JFrame {
         add = new javax.swing.JButton();
         update = new javax.swing.JButton();
         delete = new javax.swing.JButton();
+        orders = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -111,6 +116,7 @@ public class usertable extends javax.swing.JFrame {
             }
         });
 
+        approvedbotton.setBackground(new java.awt.Color(153, 153, 153));
         approvedbotton.setText("Approved Botton");
         approvedbotton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -123,7 +129,13 @@ public class usertable extends javax.swing.JFrame {
                 searchActionPerformed(evt);
             }
         });
+        search.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                searchKeyReleased(evt);
+            }
+        });
 
+        add.setBackground(new java.awt.Color(153, 153, 153));
         add.setText("Add");
         add.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -131,6 +143,7 @@ public class usertable extends javax.swing.JFrame {
             }
         });
 
+        update.setBackground(new java.awt.Color(153, 153, 153));
         update.setText("Update");
         update.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -138,10 +151,19 @@ public class usertable extends javax.swing.JFrame {
             }
         });
 
+        delete.setBackground(new java.awt.Color(153, 153, 153));
         delete.setText("Delete");
         delete.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 deleteActionPerformed(evt);
+            }
+        });
+
+        orders.setBackground(new java.awt.Color(153, 153, 153));
+        orders.setText("ORDERS");
+        orders.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ordersActionPerformed(evt);
             }
         });
 
@@ -157,7 +179,8 @@ public class usertable extends javax.swing.JFrame {
                             .addComponent(logout, javax.swing.GroupLayout.DEFAULT_SIZE, 112, Short.MAX_VALUE)
                             .addComponent(profile, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(Usertable, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(home, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(home, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(orders, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 340, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -180,16 +203,6 @@ public class usertable extends javax.swing.JFrame {
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(75, 75, 75)
-                .addComponent(home, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(Usertable, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(profile, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(logout, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -198,9 +211,21 @@ public class usertable extends javax.swing.JFrame {
                     .addComponent(search, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(add)
                     .addComponent(update)
-                    .addComponent(delete))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 262, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(delete)
+                    .addComponent(home, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(18, 18, 18)
+                        .addComponent(Usertable, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(profile, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(orders, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(18, 18, 18)
+                        .addComponent(logout, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 262, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(approvedbotton)
                 .addContainerGap())
@@ -216,7 +241,7 @@ public class usertable extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 404, Short.MAX_VALUE)
+            .addGap(0, 429, Short.MAX_VALUE)
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -241,15 +266,36 @@ public class usertable extends javax.swing.JFrame {
     private void approvedbottonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_approvedbottonActionPerformed
                                              
     int rowIndex = usertable.getSelectedRow();
-        if (rowIndex < 0) {
-            JOptionPane.showMessageDialog(null, "Please select a user to approve!");
+    
+    if (rowIndex < 0) {
+        JOptionPane.showMessageDialog(null, "Please select a user to approve!");
+    } else {
+        // 1. Kuhaon ang status sa user gikan sa table (Column 5 ang u_status sa imong SQL SELECT)
+        String currentStatus = usertable.getModel().getValueAt(rowIndex, 5).toString();
+        
+        // 2. I-check kung 'Approved' na ba ang status
+        if (currentStatus.equalsIgnoreCase("Approved")) {
+            JOptionPane.showMessageDialog(null, "This user is already approved!");
         } else {
-            String id = usertable.getModel().getValueAt(rowIndex, 0).toString();
-            String sql = "UPDATE user SET u_status = 'approved' WHERE u_id = ?";
-            config.updateRecord(sql, id); // Ginamit ang updateRecord gikan sa config
-            JOptionPane.showMessageDialog(null, "User Approved!");
-           displayUser(search.getText());
+            // 3. Kung wala pa ma-approve, mangutana na sa confirmation
+            int confirm = JOptionPane.showConfirmDialog(null, 
+                    "Are you sure you want to approve this user?", 
+                    "Approval Confirmation", 
+                    JOptionPane.YES_NO_OPTION);
+            
+            if (confirm == JOptionPane.YES_OPTION) {
+                String id = usertable.getModel().getValueAt(rowIndex, 0).toString();
+                String sql = "UPDATE user SET u_status = 'approved' WHERE u_id = ?";
+                
+                config.updateRecord(sql, id); 
+                
+                JOptionPane.showMessageDialog(null, "User Approved!");
+                
+                // Refresh the table
+                displayUser(search.getText());
+            }
         }
+    }
     
     
 
@@ -258,11 +304,17 @@ public class usertable extends javax.swing.JFrame {
     }//GEN-LAST:event_approvedbottonActionPerformed
 
     private void logoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logoutActionPerformed
-  int confirm = JOptionPane.showConfirmDialog(null, "Logout?", "Confirm", JOptionPane.YES_NO_OPTION);
+  int confirm = JOptionPane.showConfirmDialog(
+                null,
+                "Are you sure you want to log out?",
+                "Logout",
+                JOptionPane.YES_NO_OPTION);
+
         if (confirm == JOptionPane.YES_OPTION) {
-            new main.login().setVisible(true); 
-            this.dispose(); 
-        } 
+            new main.login().setVisible(true);
+            this.dispose();
+        }
+    
         
     
 
@@ -319,6 +371,14 @@ public class usertable extends javax.swing.JFrame {
 
     }//GEN-LAST:event_deleteActionPerformed
 
+    private void searchKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_searchKeyReleased
+        displayUser(search.getText());
+    }//GEN-LAST:event_searchKeyReleased
+
+    private void ordersActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ordersActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_ordersActionPerformed
+
     
      public static void main(String args[]) {
      java.awt.EventQueue.invokeLater(() -> {
@@ -338,6 +398,7 @@ public class usertable extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JButton logout;
+    private javax.swing.JButton orders;
     private javax.swing.JButton profile;
     private javax.swing.JTextField search;
     private javax.swing.JButton update;

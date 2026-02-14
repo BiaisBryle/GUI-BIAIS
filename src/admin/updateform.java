@@ -16,51 +16,43 @@ public class updateform extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> roleCombo;
     
  public updateform() {
-        // --- SESSION CHECK START ---
+        // Session Check
         Session sess = Session.getInstance();
-        if (sess.getId() == 0) { // Kung 0, pasabot wala naka-login
+        if (sess.getId() == 0) {
             JOptionPane.showMessageDialog(null, "Please Login First!");
-            java.awt.EventQueue.invokeLater(() -> {
-                new main.login().setVisible(true); // I-redirect sa login (landing page)
-            });
+            new main.login().setVisible(true);
             this.dispose();
-            return; // Dili na ipadayon ang ubang code sa ubos
+            return;
         }
-        // --- SESSION CHECK END ---
 
-        initComponents();
+        initComponents(); // USA RA DAPAT KINI!
         this.setLocationRelativeTo(null);
         groupGenders();
         addRoleSelection();
         
-        update.setVisible(false); 
-        add.setVisible(true);  
+        // Visibility setup para sa ADD
+        add.setVisible(true);
+        cancel.setVisible(true);
+        update.setVisible(false);
+        jButton1.setVisible(false);
         jLabel5.setText("Add New User Profile");
     }
 
-    // 3. CONSTRUCTOR PARA SA "UPDATE"
+    // 2. CONSTRUCTOR PARA SA "UPDATE"
     public updateform(TableModel model, int rowIndex) {
-        // --- SESSION CHECK START ---
-        Session sess = Session.getInstance();
-        if (sess.getId() == 0) {
-            JOptionPane.showMessageDialog(null, "Please Login First!");
-            java.awt.EventQueue.invokeLater(() -> {
-                new main.login().setVisible(true);
-            });
-            this.dispose();
-            return;
-        }
-        // --- SESSION CHECK END ---
-
         initComponents();
         this.setLocationRelativeTo(null);
         groupGenders();
         
+        // Visibility setup para sa UPDATE
+        update.setVisible(true);
+        jButton1.setVisible(true);
+        add.setVisible(false);
+        cancel.setVisible(false);
         userole.setVisible(false);
-        update.setVisible(true);  
-        add.setVisible(false); 
         jLabel5.setText("Update User Profile");
 
+        // Pag-load sa data gikan sa table
         try {
             userID = (model.getValueAt(rowIndex, 0) != null) ? model.getValueAt(rowIndex, 0).toString() : "";
             jTextField1.setText(getSafeValue(model, rowIndex, 1)); 
@@ -79,8 +71,6 @@ public class updateform extends javax.swing.JFrame {
         }
     }
 
-    // ... (Ang ubang methods sama sa addRoleSelection, getSafeValue, etc. pabilin lang)
-    
     private void addRoleSelection() {
         roleCombo = new javax.swing.JComboBox<>();
         roleCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Select Role", "admin", "worker"}));
@@ -96,45 +86,60 @@ public class updateform extends javax.swing.JFrame {
     }
 
     private void groupGenders() {
-        javax.swing.ButtonGroup genderGroup = new javax.swing.ButtonGroup();
-        genderGroup.add(jRadioButton1);
-        genderGroup.add(jRadioButton2);
+        // Siguraduha nga ang radio buttons naa sa buttonGroup2 para usa ra mapili
+        buttonGroup2.add(jRadioButton1);
+        buttonGroup2.add(jRadioButton2);
     }
 
     private void actionSave(String mode) {
-        // ... (Imong save logic pabilin lang)
-        String fname = jTextField1.getText().trim();
-        String lname = jTextField3.getText().trim();
-        String email = jTextField2.getText().trim();
-        String address = jTextField4.getText().trim();
-        String gender = jRadioButton1.isSelected() ? "Male" : (jRadioButton2.isSelected() ? "Female" : "");
-
-        if (fname.isEmpty() || lname.isEmpty() || email.isEmpty() || gender.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "Please fill up all fields!");
-            return;
-        }
-
-        config conf = new config();
-        if (mode.equals("ADD")) {
-            if(roleCombo.getSelectedItem().equals("Select Role")){
-                JOptionPane.showMessageDialog(null, "Please select a User Role!");
-                return;
-            }
-            String role = roleCombo.getSelectedItem().toString();
-            String sql = "INSERT INTO user (u_name, u_lname, u_email, u_address, u_gender, u_role, u_status) VALUES (?, ?, ?, ?, ?, ?, 'Pending')";
-            conf.updateRecord(sql, fname, lname, email, address, gender, role);
-            JOptionPane.showMessageDialog(null, "User Added Successfully!");
-        } else {
-            String sql = "UPDATE user SET u_name = ?, u_lname = ?, u_email = ?, u_address = ?, u_gender = ? WHERE u_id = ?";
-            conf.updateRecord(sql, fname, lname, email, address, gender, userID);
-            JOptionPane.showMessageDialog(null, "User Updated Successfully!");
-        }
-
-        new usertable().setVisible(true);
-        this.dispose();
+      String f = jTextField1.getText().trim();
+    String l = jTextField3.getText().trim();
+    String e = jTextField2.getText().trim();
+    String a = jTextField4.getText().trim();
     
+    String g = "";
+    if (jRadioButton1.isSelected()) g = "Male";
+    else if (jRadioButton2.isSelected()) g = "Female";
+
+    // 1. Basic Validation
+    if (f.isEmpty() || l.isEmpty() || e.isEmpty() || a.isEmpty() || g.isEmpty()) {
+        JOptionPane.showMessageDialog(null, "Please fill up all fields!");
+        return; 
     }
 
+    config conf = new config();
+    
+    // 2. DUPLICATE EMAIL CHECK
+    // Kung ADD, ang userID i-pass as empty string ("")
+    String checkID = (mode.equals("ADD")) ? "" : userID;
+    if (conf.isEmailExisting(e, checkID)) {
+        JOptionPane.showMessageDialog(null, "Error: Email '" + e + "' is already taken! Please use a different email.");
+        return; // Mopahunong sa code, magpabilin ang user sa fill-up form
+    }
+
+    // 3. Database Saving (Moabot ra dinhi kon walay duplicate email)
+    if (mode.equals("ADD")) {
+        if(roleCombo == null || roleCombo.getSelectedItem().equals("Select Role")){
+            JOptionPane.showMessageDialog(null, "Please select a User Role!");
+            return;
+        }
+        String role = roleCombo.getSelectedItem().toString();
+        String sql = "INSERT INTO user (u_name, u_lname, u_email, u_address, u_gender, u_role, u_status) VALUES (?, ?, ?, ?, ?, ?, 'Pending')";
+        conf.updateRecord(sql, f, l, e, a, g, role);
+        JOptionPane.showMessageDialog(null, "User Added Successfully!");
+    } else {
+        String sql = "UPDATE user SET u_name = ?, u_lname = ?, u_email = ?, u_address = ?, u_gender = ? WHERE u_id = ?";
+        conf.updateRecord(sql, f, l, e, a, g, userID);
+        JOptionPane.showMessageDialog(null, "User Updated Successfully!");
+    }
+
+    // Human sa successful save, balik sa table
+    new usertable().setVisible(true);
+    this.dispose();
+    
+    }
+    
+    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -154,9 +159,10 @@ public class updateform extends javax.swing.JFrame {
         jLabel5 = new javax.swing.JLabel();
         update = new javax.swing.JButton();
         add = new javax.swing.JButton();
-        jPanel2 = new javax.swing.JPanel();
-        jLabel6 = new javax.swing.JLabel();
         userole = new javax.swing.JLabel();
+        jButton1 = new javax.swing.JButton();
+        cancel = new javax.swing.JButton();
+        jPanel2 = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -184,15 +190,15 @@ public class updateform extends javax.swing.JFrame {
                 jRadioButton1ActionPerformed(evt);
             }
         });
-        jPanel1.add(jRadioButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(117, 245, -1, -1));
+        jPanel1.add(jRadioButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 250, -1, -1));
 
-        jRadioButton2.setText("Felame");
+        jRadioButton2.setText("Female");
         jRadioButton2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jRadioButton2ActionPerformed(evt);
             }
         });
-        jPanel1.add(jRadioButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 245, -1, -1));
+        jPanel1.add(jRadioButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 250, -1, -1));
         jPanel1.add(jTextField4, new org.netbeans.lib.awtextra.AbsoluteConstraints(117, 212, 253, 24));
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
@@ -215,14 +221,16 @@ public class updateform extends javax.swing.JFrame {
         jLabel5.setText("Profile");
         jPanel1.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 10, 260, -1));
 
+        update.setBackground(new java.awt.Color(153, 153, 153));
         update.setText("Update");
         update.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 updateActionPerformed(evt);
             }
         });
-        jPanel1.add(update, new org.netbeans.lib.awtextra.AbsoluteConstraints(141, 279, 98, 41));
+        jPanel1.add(update, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 290, 80, 41));
 
+        add.setBackground(new java.awt.Color(153, 153, 153));
         add.setText("Add");
         add.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -231,25 +239,58 @@ public class updateform extends javax.swing.JFrame {
         });
         jPanel1.add(add, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 280, 90, 41));
 
-        jPanel2.setBackground(new java.awt.Color(153, 153, 153));
-        jPanel2.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-        jPanel2.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 120, 123));
-
-        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(337, 60, 120, -1));
-
         userole.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         userole.setText("User Role:");
         jPanel1.add(userole, new org.netbeans.lib.awtextra.AbsoluteConstraints(18, 286, -1, -1));
+
+        jButton1.setBackground(new java.awt.Color(153, 153, 153));
+        jButton1.setText("Cancel");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 340, 80, 30));
+
+        cancel.setBackground(new java.awt.Color(153, 153, 153));
+        cancel.setText("Cancel");
+        cancel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cancelActionPerformed(evt);
+            }
+        });
+        jPanel1.add(cancel, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 330, 90, 30));
+
+        jPanel2.setBackground(new java.awt.Color(204, 204, 204));
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 140, Short.MAX_VALUE)
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 110, Short.MAX_VALUE)
+        );
+
+        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(320, 50, 140, 110));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 501, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 501, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 374, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         pack();
@@ -281,26 +322,38 @@ public class updateform extends javax.swing.JFrame {
        actionSave("ADD");
     }//GEN-LAST:event_addActionPerformed
 
+    private void cancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelActionPerformed
+       new usertable().setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_cancelActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+       new usertable().setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_jButton1ActionPerformed
+
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-     java.awt.EventQueue.invokeLater(() -> {
+   java.awt.EventQueue.invokeLater(() -> {
             new updateform().setVisible(true);
+        
         });
             
-      
+    
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton add;
     private javax.swing.ButtonGroup buttonGroup2;
+    private javax.swing.JButton cancel;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JRadioButton jRadioButton1;
