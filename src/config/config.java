@@ -1,12 +1,8 @@
 
 package config;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import net.proteanit.sql.DbUtils;
+import java.sql.*;
+import javax.swing.JTable;
 
 /**
  *
@@ -15,20 +11,48 @@ import net.proteanit.sql.DbUtils;
 public class config {
     
     
-    
-    
-    //Connection Method to SQLITE
-public static Connection connectDB() {
-        Connection con = null;
+  // Connection Method to SQLITE
+    public static Connection connectDB() {
         try {
-            Class.forName("org.sqlite.JDBC"); // Load the SQLite JDBC driver
-            con = DriverManager.getConnection("jdbc:sqlite:deliveries.db"); // Establish connection
-            System.out.println("Connection Successful");
+            Class.forName("org.sqlite.JDBC");
+            // Ensure deliveries.db is in the main project folder
+            Connection con = DriverManager.getConnection("jdbc:sqlite:deliveries.db");
+            return con;
         } catch (ClassNotFoundException | SQLException e) {
-            System.out.println("Connection Failed: " + e);
+            System.err.println("Connection Failed: " + e.getMessage());
+            return null;
         }
-        return con;
-        
+    }
+
+    // Static method to update JTable
+    public static void displayData(String sql, JTable table) {
+        try (Connection conn = connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            
+            // This line requires rs2xml.jar in your Libraries
+            table.setModel(net.proteanit.sql.DbUtils.resultSetToTableModel(rs));
+            
+        } catch (Exception e) {
+            System.err.println("Error displaying data: " + e.getMessage());
+        }
+    }
+
+    // Simplified Generic Method for Adding/Updating/Deleting
+    public static void updateRecord(String sql, Object... values) {
+        try (Connection conn = connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            for (int i = 0; i < values.length; i++) {
+                pstmt.setObject(i + 1, values[i]);
+            }
+
+            pstmt.executeUpdate();
+            System.out.println("Operation Successful");
+        } catch (SQLException e) {
+            System.err.println("Database Error: " + e.getMessage());
+        }
+    
     }
 
 
@@ -88,21 +112,7 @@ public void addRecord(String sql, Object... values) {
     return false;
 }
 
-
-
-
-public void displayData(String sql, javax.swing.JTable table) {
-    try (Connection conn = connectDB();
-         PreparedStatement pstmt = conn.prepareStatement(sql);
-         ResultSet rs = pstmt.executeQuery()) {
-        
-        // This line automatically maps the Resultset to your JTable
-        table.setModel(DbUtils.resultSetToTableModel(rs));
-        
-    } catch (SQLException e) {
-        System.out.println("Error displaying data: " + e.getMessage());
-    }
-}
+ 
 
    public ResultSet getData(String sql, Object... values) throws SQLException {
     Connection conn = connectDB();

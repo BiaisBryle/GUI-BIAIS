@@ -6,27 +6,44 @@ import net.proteanit.sql.DbUtils;
 import java.sql.ResultSet;
 import javax.swing.JOptionPane;
 import config.Session;
-
+import admin.admindashboard;
 
 public class usertable extends javax.swing.JFrame {
     
   public usertable() { 
-        initComponents();
-        this.setLocationRelativeTo(null);
-        displayUser();
-        
-        // Use session to welcome the admin
-        Session sess = Session.getInstance();
-        System.out.println("Admin logged in: " + sess.getName());
+  
+    
+       initComponents();
+    this.setLocationRelativeTo(null);
+    
+    displayUser(""); 
+   
+   
     }
     
-    void displayUser() {
-        config con = new config();
-        String sql = "SELECT u_id, u_name, u_lname, u_email, u_role, u_status FROM user";
-        con.displayData(sql, usertable); 
+   void displayUser(String searchTerm) {
+
+   try {
+        String sql = "SELECT u_id, u_name, u_lname, u_email, u_role, u_status, u_address, u_gender FROM user "
+                   + "WHERE u_name LIKE '%" + searchTerm + "%' "
+                   + "OR u_lname LIKE '%" + searchTerm + "%' "
+                   + "OR u_email LIKE '%" + searchTerm + "%'";
+                   
+        config conf = new config(); // Create instance
+        conf.displayData(sql, usertable); // Call via instance
+
+        if (usertable.getColumnCount() >= 8) {
+            usertable.getColumnModel().getColumn(6).setMinWidth(0);
+            usertable.getColumnModel().getColumn(6).setMaxWidth(0);
+            usertable.getColumnModel().getColumn(7).setMinWidth(0);
+            usertable.getColumnModel().getColumn(7).setMaxWidth(0);
+        }
+    } catch (Exception e) {
+        System.out.println("Error displaying data: " + e.getMessage());
     }
 
 
+   }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -208,13 +225,12 @@ public class usertable extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void homeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_homeActionPerformed
-   new admindashboard().setVisible(true);
+  new admindashboard().setVisible(true);
         this.dispose();
     }//GEN-LAST:event_homeActionPerformed
 
     private void UsertableActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_UsertableActionPerformed
-     new usertable().setVisible(true); 
-        this.dispose();
+    displayUser(search.getText());
     }//GEN-LAST:event_UsertableActionPerformed
 
     private void profileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_profileActionPerformed
@@ -223,18 +239,21 @@ public class usertable extends javax.swing.JFrame {
     }//GEN-LAST:event_profileActionPerformed
 
     private void approvedbottonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_approvedbottonActionPerformed
-                                              
+                                             
     int rowIndex = usertable.getSelectedRow();
-    if (rowIndex < 0) {
-        JOptionPane.showMessageDialog(null, "Please select a user to approve!");
-    } else {
-        String id = usertable.getModel().getValueAt(rowIndex, 0).toString();
-        config con = new config();
-        String sql = "UPDATE user SET u_status = 'Active' WHERE u_id = ?";
-        con.updateRecord(sql, id);
-        JOptionPane.showMessageDialog(null, "User Approved!");
-        displayUser(); // Refresh the table
-    }
+        if (rowIndex < 0) {
+            JOptionPane.showMessageDialog(null, "Please select a user to approve!");
+        } else {
+            String id = usertable.getModel().getValueAt(rowIndex, 0).toString();
+            String sql = "UPDATE user SET u_status = 'approved' WHERE u_id = ?";
+            config.updateRecord(sql, id); // Ginamit ang updateRecord gikan sa config
+            JOptionPane.showMessageDialog(null, "User Approved!");
+           displayUser(search.getText());
+        }
+    
+    
+
+
 
     }//GEN-LAST:event_approvedbottonActionPerformed
 
@@ -250,56 +269,61 @@ public class usertable extends javax.swing.JFrame {
     }//GEN-LAST:event_logoutActionPerformed
 
     private void searchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchActionPerformed
-        // TODO add your handling code here:
+
     }//GEN-LAST:event_searchActionPerformed
 
     private void updateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateActionPerformed
-                                      
-    int rowIndex = usertable.getSelectedRow();
+   int rowIndex = usertable.getSelectedRow();
+    
     if (rowIndex < 0) {
         JOptionPane.showMessageDialog(null, "Please select a user to update!");
     } else {
-        // Halimbawa: Pagkuha ng ID para ipasa sa Edit Form
-        String id = usertable.getModel().getValueAt(rowIndex, 0).toString();
-        JOptionPane.showMessageDialog(null, "Loading Update Form for ID: " + id);
-        // new editUserForm(id).setVisible(true);
+        // Kuhaon ang model sa table
+        javax.swing.table.TableModel model = usertable.getModel();
+        
+        // Tawgon ang updateform ug ipasa ang model ug ang napili nga row
+        updateform uf = new updateform(model, rowIndex);
+        uf.setVisible(true);
+        
+        // Opsyonal: I-close o i-hide ang usertable
+        this.dispose(); 
     }
 
     }//GEN-LAST:event_updateActionPerformed
 
     private void addActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addActionPerformed
-                                     
-    // Kung mayroon kang registration or add user form, i-link ito rito:
-    // new registrationForm().setVisible(true);
-    // this.dispose();
-    JOptionPane.showMessageDialog(null, "Redirecting to Registration/Add User form...");
+     updateform uf = new updateform();
+    uf.setVisible(true);
+    
+  
+    this.dispose();
+    
 
     }//GEN-LAST:event_addActionPerformed
 
     private void deleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteActionPerformed
-                                         
     int rowIndex = usertable.getSelectedRow();
-    if (rowIndex < 0) {
-        JOptionPane.showMessageDialog(null, "Please select a user to delete!");
-    } else {
-        int confirm = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete this user?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION) {
-            String id = usertable.getModel().getValueAt(rowIndex, 0).toString();
-            config con = new config();
-            String sql = "DELETE FROM user WHERE u_id = ?";
-            con.updateRecord(sql, id);
-            displayUser(); // Refresh the table
-}
-}
+        if (rowIndex < 0) {
+            JOptionPane.showMessageDialog(null, "Please select a user to delete!");
+        } else {
+            int confirm = JOptionPane.showConfirmDialog(null, "Delete this user?", "Confirm", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                String id = usertable.getModel().getValueAt(rowIndex, 0).toString();
+                String sql = "DELETE FROM user WHERE u_id = ?";
+                config.updateRecord(sql, id); // ✅ FIX: Ginamit ang updateRecord para sa delete
+                JOptionPane.showMessageDialog(null, "User deleted successfully!");
+                 displayUser(search.getText());
+            }
+        }
+
 
     }//GEN-LAST:event_deleteActionPerformed
 
-    /**
-     * @param args the command line arguments
-     */
-  
+    
      public static void main(String args[]) {
-     
+     java.awt.EventQueue.invokeLater(() -> {
+            new usertable().setVisible(true);
+        });
  
     }
 

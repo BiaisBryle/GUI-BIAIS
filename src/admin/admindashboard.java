@@ -16,7 +16,7 @@ public admindashboard() {
         
         // Example: You can set a welcome message using the session
         Session sess = Session.getInstance();
-        jLabel2.setText("WELCOME, " + sess.getName().toUpperCase());
+        jLabel2.setText("Admin,"+sess.getName().toUpperCase());
     }
     
     @SuppressWarnings("unchecked")
@@ -29,7 +29,6 @@ public admindashboard() {
         userstable = new javax.swing.JButton();
         profile = new javax.swing.JButton();
         logout = new javax.swing.JButton();
-        jPanel2 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -76,14 +75,8 @@ public admindashboard() {
         });
         jPanel1.add(logout, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 310, 110, 50));
 
-        jPanel2.setBackground(new java.awt.Color(245, 205, 208));
-        jPanel2.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
         jLabel2.setFont(new java.awt.Font("Tahoma", 0, 36)); // NOI18N
-        jLabel2.setText("ADMIN DASHBOARD");
-        jPanel2.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 0, 330, 50));
-
-        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 10, 350, 50));
+        jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 10, 350, 50));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -141,7 +134,6 @@ public admindashboard() {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
     private javax.swing.JButton logout;
     private javax.swing.JButton profile;
     private javax.swing.JButton userstable;

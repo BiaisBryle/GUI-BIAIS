@@ -2,6 +2,7 @@
 package Worker;
 
 import config.config;
+import config.Session;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,27 +12,25 @@ import javax.swing.JOptionPane;
 
 
 public final class wprofile extends javax.swing.JFrame {
-   private String userEmail;
-  
-    public wprofile() {
-        initComponents();
-        this.setLocationRelativeTo(null);
-    }
-
-    public wprofile(String email) {
-        initComponents();
-        this.userEmail = email;
-        this.setLocationRelativeTo(null);
-        displayUserInfo(email);
     
-    }
+   public wprofile() {
+        initComponents();
+        this.setLocationRelativeTo(null);
+        displayUserInfo();   // Load logged-in user info
+   
+   }
+    
+   
+    public void displayUserInfo() {
 
-    public void displayUserInfo(String email) {
-       String sql = "SELECT u_name, u_lname, u_email, u_role FROM user WHERE u_email = ?";
-        
+        Session sess = Session.getInstance();
+        String email = sess.getEmail();   // Get email from Session
+
+        String sql = "SELECT u_name, u_lname, u_email, u_role FROM user WHERE u_email = ?";
+
         try (Connection conn = config.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
+
             pstmt.setString(1, email);
             ResultSet rs = pstmt.executeQuery();
 
@@ -41,7 +40,7 @@ public final class wprofile extends javax.swing.JFrame {
                 jLabel4.setText("Email: " + rs.getString("u_email"));
                 jLabel5.setText("Role: " + rs.getString("u_role"));
             }
-            rs.close();
+
         } catch (SQLException e) {
             System.out.println("Error loading user info: " + e.getMessage());
         }
@@ -133,36 +132,35 @@ public final class wprofile extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void profileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_profileActionPerformed
-        displayUserInfo(this.userEmail);
+      
     }//GEN-LAST:event_profileActionPerformed
 
     private void homeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_homeActionPerformed
-     new workerdashboard(this.userEmail).setVisible(true);
-    this.dispose();;
+     new workerdashboard().setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_homeActionPerformed
 
     private void logoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logoutActionPerformed
-       int confirm = JOptionPane.showConfirmDialog(null, "Are you sure you want to log out?", "Logout", JOptionPane.YES_NO_OPTION);
-    
-    if (confirm == JOptionPane.YES_OPTION) {
-        // Palitan ang 'login' ng tamang class name ng iyong login form
-        new main.login().setVisible(true); 
-        this.dispose(); // Isara ang kasalukuyang usertable window
+        int confirm = JOptionPane.showConfirmDialog(
+                null,
+                "Are you sure you want to log out?",
+                "Logout",
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            new main.login().setVisible(true);
+            this.dispose();
+        }
     }
-    }//GEN-LAST:event_logoutActionPerformed
 
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(() -> {
             new wprofile().setVisible(true);
         });
-        
-        
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new wprofile().setVisible(true);
-            }
-        });
-    }
+    }//GEN-LAST:event_logoutActionPerformed
+
+ 
+    
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel firstname;

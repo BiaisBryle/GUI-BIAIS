@@ -1,73 +1,88 @@
 package main;
 
 import config.config;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import javax.swing.JOptionPane;
+import config.Session;
+import java.sql.*;
+import javax.swing.*;
 import Worker.workerdashboard;
 import admin.admindashboard;
-import java.sql.SQLException;
-import javax.swing.*;
-import java.awt.*;
-import java.sql.*;
-import config.Session;
 
 
 
 
 public class login extends javax.swing.JFrame {
+    
     public login() {
         initComponents();
         this.setLocationRelativeTo(null);
     }
 
-    private void loginUser() {
-        String user_email = email.getText(); 
-        String user_pass = pass.getText();
+   private void loginUser() {
+    String user_email = email.getText(); 
+    String user_pass = pass.getText();
 
-        if (user_email.isEmpty() || user_pass.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "Please fill in all fields!");
+    if (user_email.isEmpty() || user_pass.isEmpty()) {
+        JOptionPane.showMessageDialog(null, "Please fill in all fields!");
+        return;
+    }
+
+    String query = "SELECT * FROM user WHERE u_email = ? AND u_pass = ?";
+    
+    // Use try-with-resources for automatic closing
+    try (Connection conn = config.connectDB()) {
+        if (conn == null) {
+            JOptionPane.showMessageDialog(null, "Database Connection Failed!");
             return;
         }
-
-        String query = "SELECT * FROM user WHERE u_email = ? AND u_pass = ?";
-
-        try (Connection conn = config.connectDB(); 
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-
+        
+        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
             pstmt.setString(1, user_email);
             pstmt.setString(2, user_pass);
-            
+
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
+                    // 1. Check Account Status
                     String status = rs.getString("u_status"); 
-                    
-                    if (status.equalsIgnoreCase("Pending")) {
+                    if ("Pending".equalsIgnoreCase(status)) {
                         JOptionPane.showMessageDialog(null, "Account Pending. Wait for Admin approval.");
-                    } else {
-                        // SET SESSION DATA
-                        Session sess = Session.getInstance();
-                        sess.setId(rs.getInt("u_id"));
-                        sess.setName(rs.getString("u_name"));
-                        sess.setEmail(rs.getString("u_email"));
-                        sess.setRole(rs.getString("u_role"));
-
-                        if (sess.getRole().equalsIgnoreCase("worker")) {
-                            new workerdashboard().setVisible(true);
-                        } else {
-                            new admindashboard().setVisible(true);
-                        }
-                        this.dispose();
+                        return;
                     }
+
+                    // 2. Save User Data to Global Session
+                    Session sess = Session.getInstance();
+                    sess.setId(rs.getInt("u_id"));
+                    sess.setName(rs.getString("u_name"));
+                    sess.setEmail(rs.getString("u_email"));
+                    String role = rs.getString("u_role");
+                    sess.setRole(role);
+
+                    // 3. Conditional Redirect
+                    if ("worker".equalsIgnoreCase(role)) {
+                        new workerdashboard().setVisible(true);
+                    } else if ("admin".equalsIgnoreCase(role)) {
+                        new admindashboard().setVisible(true);
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Unknown Role: " + role);
+                        return;
+                    }
+                    
+                    this.dispose(); // Close login window
                 } else {
-                    JOptionPane.showMessageDialog(null, "Invalid Credentials!");
+                    JOptionPane.showMessageDialog(null, "Invalid Email or Password!");
                 }
             }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
         }
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(null, "Database error: " + e.getMessage());
     }
+
+    
+
+
+
+}
+
+    
 
 
 
@@ -184,7 +199,7 @@ public class login extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         pack();
@@ -202,9 +217,9 @@ public class login extends javax.swing.JFrame {
     }//GEN-LAST:event_passActionPerformed
 
     private void jLabel6MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel6MouseClicked
-     register regFrame = new register(); // create register frame
-         regFrame.setVisible(true);          // show it
-          this.dispose();  
+     register regFrame = new register();
+        regFrame.setVisible(true);
+        this.dispose();  
     }//GEN-LAST:event_jLabel6MouseClicked
 
     private void jLabel3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel3MouseClicked
@@ -213,14 +228,17 @@ public class login extends javax.swing.JFrame {
     }//GEN-LAST:event_jLabel3MouseClicked
 
     private void jPanel2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanel2MouseClicked
-        // TODO add your handling code here:
+      main.login loginFrame = new main.login(); // This is where line 16 in login.java is called
+    loginFrame.setVisible(true);
+    this.dispose();
     }//GEN-LAST:event_jPanel2MouseClicked
 
     /**
      * @param args the command line arguments
      */
    public static void main(String args[]) {
-   java.awt.EventQueue.invokeLater(() -> new login().setVisible(true));
+ 
+        java.awt.EventQueue.invokeLater(() -> new login().setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
