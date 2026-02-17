@@ -4,6 +4,7 @@ package admin;
 import javax.swing.JOptionPane;
 import main.login;
 import config.Session;
+import order.orders;
 
 
 public class admindashboard extends javax.swing.JFrame {
@@ -31,6 +32,7 @@ public admindashboard() {
         logout = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
         orders = new javax.swing.JButton();
+        jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -38,7 +40,7 @@ public admindashboard() {
         jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/logo small.PNG"))); // NOI18N
-        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 70, 307, 310));
+        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 70, 307, 310));
 
         home.setBackground(new java.awt.Color(153, 153, 153));
         home.setText("HOME");
@@ -47,7 +49,7 @@ public admindashboard() {
                 homeActionPerformed(evt);
             }
         });
-        jPanel1.add(home, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 60, 110, 50));
+        jPanel1.add(home, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 60, 110, 40));
 
         userstable.setBackground(new java.awt.Color(153, 153, 153));
         userstable.setText("USERS");
@@ -56,7 +58,7 @@ public admindashboard() {
                 userstableActionPerformed(evt);
             }
         });
-        jPanel1.add(userstable, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 120, 110, 50));
+        jPanel1.add(userstable, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 160, 110, 40));
 
         profile.setBackground(new java.awt.Color(153, 153, 153));
         profile.setText("PROFILE");
@@ -65,7 +67,7 @@ public admindashboard() {
                 profileActionPerformed(evt);
             }
         });
-        jPanel1.add(profile, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 190, 110, 50));
+        jPanel1.add(profile, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, 110, 40));
 
         logout.setBackground(new java.awt.Color(153, 153, 153));
         logout.setText("LOG OUT");
@@ -74,7 +76,7 @@ public admindashboard() {
                 logoutActionPerformed(evt);
             }
         });
-        jPanel1.add(logout, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 320, 110, 50));
+        jPanel1.add(logout, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 310, 110, 40));
 
         jLabel2.setFont(new java.awt.Font("Tahoma", 0, 36)); // NOI18N
         jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 10, 350, 50));
@@ -86,7 +88,16 @@ public admindashboard() {
                 ordersActionPerformed(evt);
             }
         });
-        jPanel1.add(orders, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 260, 110, 50));
+        jPanel1.add(orders, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 260, 110, 40));
+
+        jButton1.setBackground(new java.awt.Color(153, 153, 153));
+        jButton1.setText("MASTER LIST");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 210, -1, 40));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -131,8 +142,17 @@ public admindashboard() {
     }//GEN-LAST:event_profileActionPerformed
 
     private void ordersActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ordersActionPerformed
-        // TODO add your handling code here:
+      new orders().setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_ordersActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        masterlist ml = new masterlist();
+        ml.setVisible(true);
+
+        // Mo-close ang Dashboard para dili daghan og windows nga abli
+        this.dispose();
+    }//GEN-LAST:event_jButton1ActionPerformed
 
    
     public static void main(String args[]) {
@@ -145,6 +165,7 @@ public admindashboard() {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton home;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;

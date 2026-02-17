@@ -5,6 +5,7 @@ import config.Session;
 import java.sql.*;
 import javax.swing.*;
 import Worker.workerdashboard;
+import Worker.worder;
 import admin.admindashboard;
 
 
@@ -28,7 +29,6 @@ public class login extends javax.swing.JFrame {
 
     String query = "SELECT * FROM user WHERE u_email = ? AND u_pass = ?";
     
-    // Use try-with-resources for automatic closing
     try (Connection conn = config.connectDB()) {
         if (conn == null) {
             JOptionPane.showMessageDialog(null, "Database Connection Failed!");
@@ -56,15 +56,29 @@ public class login extends javax.swing.JFrame {
                     String role = rs.getString("u_role");
                     sess.setRole(role);
 
+                    // --- KINI ANG AREA NGA NAAY NA-UPDATE ---
                     // 3. Conditional Redirect
                     if ("worker".equalsIgnoreCase(role)) {
+                        // Kuhaon nato ang u_name gikan sa database result
+                        String workerName = rs.getString("u_name");
+                        
+                        // Imbes nga workerdashboard lang, mahimo sab nimo i-pasa ang 
+                        // workerName diretso sa worder frame kung mao to imong gi-codingan
+                        // new worder(workerName).setVisible(true); 
+                        
+                        // O kung gusto ka dashboard sa una:
                         new workerdashboard().setVisible(true);
+                        
+                        JOptionPane.showMessageDialog(null, "Welcome Worker: " + workerName);
+
                     } else if ("admin".equalsIgnoreCase(role)) {
                         new admindashboard().setVisible(true);
+                        JOptionPane.showMessageDialog(null, "Login Success as Admin!");
                     } else {
                         JOptionPane.showMessageDialog(null, "Unknown Role: " + role);
                         return;
                     }
+                    // ---------------------------------------
                     
                     this.dispose(); // Close login window
                 } else {
@@ -75,10 +89,6 @@ public class login extends javax.swing.JFrame {
     } catch (SQLException e) {
         JOptionPane.showMessageDialog(null, "Database error: " + e.getMessage());
     }
-
-    
-
-
 
 }
 

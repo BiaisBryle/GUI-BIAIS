@@ -173,7 +173,9 @@ public class workerdashboard extends javax.swing.JFrame {
     }//GEN-LAST:event_logoutActionPerformed
 
     private void ordersActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ordersActionPerformed
-        // TODO add your handling code here:
+       worder ord = new worder(); 
+    ord.setVisible(true);
+    this.dispose();
     }//GEN-LAST:event_ordersActionPerformed
 
     /**

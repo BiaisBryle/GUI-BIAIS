@@ -92,50 +92,56 @@ public class updateform extends javax.swing.JFrame {
     }
 
     private void actionSave(String mode) {
-      String f = jTextField1.getText().trim();
-    String l = jTextField3.getText().trim();
-    String e = jTextField2.getText().trim();
-    String a = jTextField4.getText().trim();
+    String f = jTextField1.getText().trim();  // First Name
+    String l = jTextField3.getText().trim();  // Last Name
+    String e = jTextField2.getText().trim();  // Email
+    String p = jTextField5.getText().trim();  // PASSWORD (u_pass)
+    String a = jTextField4.getText().trim();  // Address
     
     String g = "";
     if (jRadioButton1.isSelected()) g = "Male";
     else if (jRadioButton2.isSelected()) g = "Female";
 
-    // 1. Basic Validation
-    if (f.isEmpty() || l.isEmpty() || e.isEmpty() || a.isEmpty() || g.isEmpty()) {
-        JOptionPane.showMessageDialog(null, "Please fill up all fields!");
+    // 1. Validation - Giapil ang 'p' para dili pwede ang blanko nga password
+    if (f.isEmpty() || l.isEmpty() || e.isEmpty() || p.isEmpty() || a.isEmpty() || g.isEmpty()) {
+        JOptionPane.showMessageDialog(null, "Please fill up all fields including Password!");
         return; 
     }
 
     config conf = new config();
-    
-    // 2. DUPLICATE EMAIL CHECK
-    // Kung ADD, ang userID i-pass as empty string ("")
     String checkID = (mode.equals("ADD")) ? "" : userID;
+    
     if (conf.isEmailExisting(e, checkID)) {
-        JOptionPane.showMessageDialog(null, "Error: Email '" + e + "' is already taken! Please use a different email.");
-        return; // Mopahunong sa code, magpabilin ang user sa fill-up form
+        JOptionPane.showMessageDialog(null, "Error: Email '" + e + "' is already taken!");
+        return;
     }
 
-    // 3. Database Saving (Moabot ra dinhi kon walay duplicate email)
     if (mode.equals("ADD")) {
         if(roleCombo == null || roleCombo.getSelectedItem().equals("Select Role")){
             JOptionPane.showMessageDialog(null, "Please select a User Role!");
             return;
         }
         String role = roleCombo.getSelectedItem().toString();
-        String sql = "INSERT INTO user (u_name, u_lname, u_email, u_address, u_gender, u_role, u_status) VALUES (?, ?, ?, ?, ?, ?, 'Pending')";
-        conf.updateRecord(sql, f, l, e, a, g, role);
+        
+        // GIGAMIT ANG 'u_pass' SA SQL INSERT
+        String sql = "INSERT INTO user (u_name, u_lname, u_email, u_pass, u_address, u_gender, u_role, u_status) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')";
+        
+        // Siguraduha nga sakto ang order sa parameters (f, l, e, p, a, g, role)
+        conf.updateRecord(sql, f, l, e, p, a, g, role);
         JOptionPane.showMessageDialog(null, "User Added Successfully!");
+        
     } else {
-        String sql = "UPDATE user SET u_name = ?, u_lname = ?, u_email = ?, u_address = ?, u_gender = ? WHERE u_id = ?";
-        conf.updateRecord(sql, f, l, e, a, g, userID);
+        // GIGAMIT ANG 'u_pass' SA SQL UPDATE
+        String sql = "UPDATE user SET u_name = ?, u_lname = ?, u_email = ?, u_pass = ?, u_address = ?, u_gender = ? WHERE u_id = ?";
+        
+        conf.updateRecord(sql, f, l, e, p, a, g, userID);
         JOptionPane.showMessageDialog(null, "User Updated Successfully!");
     }
 
-    // Human sa successful save, balik sa table
+    // Balik sa table
     new usertable().setVisible(true);
-    this.dispose();
+    this.dispose();;
     
     }
     
@@ -163,6 +169,8 @@ public class updateform extends javax.swing.JFrame {
         jButton1 = new javax.swing.JButton();
         cancel = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
+        jLabel6 = new javax.swing.JLabel();
+        jTextField5 = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -174,15 +182,15 @@ public class updateform extends javax.swing.JFrame {
                 jTextField1ActionPerformed(evt);
             }
         });
-        jPanel1.add(jTextField1, new org.netbeans.lib.awtextra.AbsoluteConstraints(118, 119, 100, -1));
+        jPanel1.add(jTextField1, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 80, 100, -1));
 
         jTextField2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jTextField2ActionPerformed(evt);
             }
         });
-        jPanel1.add(jTextField2, new org.netbeans.lib.awtextra.AbsoluteConstraints(117, 182, 100, -1));
-        jPanel1.add(jTextField3, new org.netbeans.lib.awtextra.AbsoluteConstraints(117, 149, 100, 24));
+        jPanel1.add(jTextField2, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 150, 100, -1));
+        jPanel1.add(jTextField3, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 110, 100, 24));
 
         jRadioButton1.setText("Male");
         jRadioButton1.addActionListener(new java.awt.event.ActionListener() {
@@ -203,15 +211,15 @@ public class updateform extends javax.swing.JFrame {
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jLabel1.setText("First name:");
-        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 119, -1, 19));
+        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, -1, 19));
 
         jLabel2.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jLabel2.setText("Last name:");
-        jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 148, -1, -1));
+        jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, -1, -1));
 
         jLabel3.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jLabel3.setText("Email:");
-        jPanel1.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(51, 180, -1, -1));
+        jPanel1.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 150, -1, -1));
 
         jLabel4.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jLabel4.setText("Address:");
@@ -276,6 +284,17 @@ public class updateform extends javax.swing.JFrame {
 
         jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(320, 50, 140, 110));
 
+        jLabel6.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        jLabel6.setText("Password:");
+        jPanel1.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 180, -1, -1));
+
+        jTextField5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextField5ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jTextField5, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 180, 100, -1));
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -332,6 +351,10 @@ public class updateform extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 
+    private void jTextField5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField5ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jTextField5ActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -354,6 +377,7 @@ public class updateform extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JRadioButton jRadioButton1;
@@ -362,6 +386,7 @@ public class updateform extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField2;
     private javax.swing.JTextField jTextField3;
     private javax.swing.JTextField jTextField4;
+    private javax.swing.JTextField jTextField5;
     private javax.swing.JButton update;
     private javax.swing.JLabel userole;
     // End of variables declaration//GEN-END:variables
