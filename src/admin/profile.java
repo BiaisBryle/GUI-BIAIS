@@ -3,76 +3,151 @@
 package admin;
 
 import config.config;
+import config.Session;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.swing.JOptionPane;
-import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import main.login;
-import config.Session;
 import order.orders;
 
 
 public final class profile extends javax.swing.JFrame {
-   private String adminEmail;
-    private String userEmail;
-   
-  
-    // Constructor nga modawat og email gikan sa Dashboard/Login
-    public profile() { // Constructor is now empty
+  private String destinationPath = null;
+    private String oldImagePath = null;
+
+    public profile() {
         initComponents();
         this.setLocationRelativeTo(null);
-        displayUserInfo(); // No longer needs to pass email
+        displayUserInfo();
+
+        // 1. I-lock ang Role field aron dili mausab
+        jTextField4.setEditable(false);
+        jTextField4.setFocusable(false);
+
+        // 2. I-set ang button transparency para sa Upload Photo (Overlay sa jLabel2)
+        jButton4.setOpaque(false);
+        jButton4.setContentAreaFilled(false);
+        jButton4.setBorderPainted(false);
+
+        // 3. Disable UPDATE button sa sugod hangtod naay usbon ang user
+        jButton3.setEnabled(false);
+
+        // 4. I-add ang listener para sa text fields
+        addEditListener();
+    }
+
+    private void addEditListener() {
+        DocumentListener dl = new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) { jButton3.setEnabled(true); }
+            @Override
+            public void removeUpdate(DocumentEvent e) { jButton3.setEnabled(true); }
+            @Override
+            public void changedUpdate(DocumentEvent e) { jButton3.setEnabled(true); }
+        };
+        jTextField1.getDocument().addDocumentListener(dl);
+        jTextField2.getDocument().addDocumentListener(dl);
+        jTextField3.getDocument().addDocumentListener(dl);
     }
 
     public void displayUserInfo() {
         Session sess = Session.getInstance();
-        String email = sess.getEmail(); // Get email from Session
-        
-        String sql = "SELECT u_name, u_lname, u_email, u_role FROM user WHERE u_email = ?";
-        
+        String emailStr = sess.getEmail();
+        String sql = "SELECT u_name, u_lname, u_email, u_role, u_image FROM user WHERE u_email = ?";
+
         try (Connection conn = config.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setString(1, email);
+
+            pstmt.setString(1, emailStr);
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                jLabel2.setText("First Name: " + rs.getString("u_name"));
-                jLabel3.setText("Last Name: " + rs.getString("u_lname"));
-                jLabel4.setText("Email: " + rs.getString("u_email"));
-                jLabel5.setText("Role: " + rs.getString("u_role"));
+                // I-set ang text sa fields
+                jTextField1.setText(rs.getString("u_name"));
+                jTextField2.setText(rs.getString("u_lname"));
+                jTextField3.setText(rs.getString("u_email"));
+                jTextField4.setText(rs.getString("u_role"));
+
+                // I-save ang karaan nga path para sa image
+                oldImagePath = rs.getString("u_image");
+                
+                if (oldImagePath != null && !oldImagePath.isEmpty()) {
+                    setProfileImage(oldImagePath);
+                    jButton4.setText(""); // Kuhaon ang text kon naay image
+                } else {
+                    jLabel2.setIcon(null);
+                    jButton4.setText("UPLOAD PHOTO");
+                }
+                
+                // Reset state
+                destinationPath = null;
+                jButton3.setEnabled(false);
             }
         } catch (SQLException e) {
-            System.out.println("Error loading user info: " + e.getMessage());
+            System.out.println("Error: " + e.getMessage());
         }
+    }
+
+    private void setProfileImage(String path) {
+        try {
+            javax.swing.ImageIcon icon = new javax.swing.ImageIcon(path);
+            java.awt.Image img = icon.getImage().getScaledInstance(jLabel2.getWidth(), jLabel2.getHeight(), java.awt.Image.SCALE_SMOOTH);
+            jLabel2.setIcon(new javax.swing.ImageIcon(img));
+        } catch (Exception e) {
+            System.out.println("Error setting image: " + e.getMessage());
+        }
+    
     
 }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jPanel3 = new javax.swing.JPanel();
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         home = new javax.swing.JButton();
         usertable = new javax.swing.JButton();
         profile = new javax.swing.JButton();
         logout = new javax.swing.JButton();
-        jPanel2 = new javax.swing.JPanel();
-        jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
-        jLabel4 = new javax.swing.JLabel();
-        jLabel5 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
+        jPanel4 = new javax.swing.JPanel();
+        jLabel2 = new javax.swing.JLabel();
+        jButton4 = new javax.swing.JButton();
+        firstname = new javax.swing.JLabel();
+        lastname = new javax.swing.JLabel();
+        email = new javax.swing.JLabel();
+        role = new javax.swing.JLabel();
+        jButton3 = new javax.swing.JButton();
+        jTextField1 = new javax.swing.JTextField();
+        jTextField2 = new javax.swing.JTextField();
+        jTextField3 = new javax.swing.JTextField();
+        jTextField4 = new javax.swing.JTextField();
+
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 100, Short.MAX_VALUE)
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 100, Short.MAX_VALUE)
+        );
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         jPanel1.setBackground(new java.awt.Color(245, 205, 208));
+        jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 0, 36)); // NOI18N
         jLabel1.setText("PROFILE");
+        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(185, 0, -1, -1));
 
         home.setBackground(new java.awt.Color(153, 153, 153));
         home.setText("HOME");
@@ -81,6 +156,7 @@ public final class profile extends javax.swing.JFrame {
                 homeActionPerformed(evt);
             }
         });
+        jPanel1.add(home, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 30, 120, 45));
 
         usertable.setBackground(new java.awt.Color(153, 153, 153));
         usertable.setText("USERS");
@@ -89,9 +165,11 @@ public final class profile extends javax.swing.JFrame {
                 usertableActionPerformed(evt);
             }
         });
+        jPanel1.add(usertable, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 100, 120, 45));
 
         profile.setBackground(new java.awt.Color(153, 153, 153));
         profile.setText("PROFILE");
+        jPanel1.add(profile, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 160, 120, 45));
 
         logout.setBackground(new java.awt.Color(153, 153, 153));
         logout.setText("LOG OUT");
@@ -100,25 +178,7 @@ public final class profile extends javax.swing.JFrame {
                 logoutActionPerformed(evt);
             }
         });
-
-        jPanel2.setBackground(new java.awt.Color(245, 205, 208));
-        jPanel2.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        jLabel2.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        jLabel2.setText("first name:");
-        jPanel2.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, 330, -1));
-
-        jLabel3.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        jLabel3.setText("Last name:");
-        jPanel2.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 153, 320, -1));
-
-        jLabel4.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        jLabel4.setText("Email:");
-        jPanel2.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(51, 193, 280, -1));
-
-        jLabel5.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        jLabel5.setText("Role:");
-        jPanel2.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(59, 233, 270, -1));
+        jPanel1.add(logout, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 340, 120, 45));
 
         jButton1.setBackground(new java.awt.Color(153, 153, 153));
         jButton1.setText("MASTER LIST");
@@ -127,6 +187,7 @@ public final class profile extends javax.swing.JFrame {
                 jButton1ActionPerformed(evt);
             }
         });
+        jPanel1.add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 220, 120, 46));
 
         jButton2.setBackground(new java.awt.Color(153, 153, 153));
         jButton2.setText("ORDERS");
@@ -135,63 +196,59 @@ public final class profile extends javax.swing.JFrame {
                 jButton2ActionPerformed(evt);
             }
         });
+        jPanel1.add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 280, 120, 50));
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(usertable, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(profile, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(logout, javax.swing.GroupLayout.DEFAULT_SIZE, 113, Short.MAX_VALUE)
-                    .addComponent(home, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addContainerGap())
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addGap(99, 99, 99)
-                        .addComponent(jLabel1)
-                        .addGap(139, 139, 139))))
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel1)
-                .addGap(18, 18, 18)
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 282, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(49, Short.MAX_VALUE))
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(43, 43, 43)
-                .addComponent(home, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(usertable, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(profile, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(logout, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(27, 27, 27))
-        );
+        jPanel4.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        jPanel4.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 130, 110));
+
+        jButton4.setText("Upload Photo");
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton4ActionPerformed(evt);
+            }
+        });
+        jPanel4.add(jButton4, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 40, 130, -1));
+
+        jPanel1.add(jPanel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 50, 130, 110));
+
+        firstname.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        firstname.setText("First name:");
+        jPanel1.add(firstname, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 200, -1, -1));
+
+        lastname.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        lastname.setText("Last name:");
+        jPanel1.add(lastname, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 240, -1, -1));
+
+        email.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        email.setText("Email:");
+        jPanel1.add(email, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 280, -1, -1));
+
+        role.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        role.setText("Role:");
+        jPanel1.add(role, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 320, -1, -1));
+
+        jButton3.setBackground(new java.awt.Color(153, 153, 153));
+        jButton3.setText("Update");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(410, 350, -1, 40));
+        jPanel1.add(jTextField1, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 200, 140, -1));
+        jPanel1.add(jTextField2, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 240, 140, -1));
+        jPanel1.add(jTextField3, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 280, 140, -1));
+        jPanel1.add(jTextField4, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 320, 140, -1));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         pack();
@@ -232,6 +289,72 @@ public final class profile extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_jButton2ActionPerformed
 
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+       Session sess = Session.getInstance();
+        String currentEmail = sess.getEmail();
+        String fName = jTextField1.getText();
+        String lName = jTextField2.getText();
+        String newEmail = jTextField3.getText();
+
+        if (fName.isEmpty() || lName.isEmpty() || newEmail.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Fields cannot be empty!");
+            return;
+        }
+
+        try (Connection conn = config.connectDB()) {
+            String sql;
+            PreparedStatement pstmt;
+
+            if (destinationPath != null) {
+                // I-save ang image sa folder
+                java.io.File sourceFile = new java.io.File(destinationPath);
+                java.io.File destFolder = new java.io.File("src/user_images/");
+                if (!destFolder.exists()) destFolder.mkdirs();
+
+                String fileName = System.currentTimeMillis() + "_" + sourceFile.getName();
+                java.nio.file.Path target = java.nio.file.Paths.get("src/user_images/" + fileName);
+                java.nio.file.Files.copy(sourceFile.toPath(), target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                String finalImagePath = "src/user_images/" + fileName;
+
+                sql = "UPDATE user SET u_name=?, u_lname=?, u_email=?, u_image=? WHERE u_email=?";
+                pstmt = conn.prepareStatement(sql);
+                pstmt.setString(1, fName);
+                pstmt.setString(2, lName);
+                pstmt.setString(3, newEmail);
+                pstmt.setString(4, finalImagePath);
+                pstmt.setString(5, currentEmail);
+            } else {
+                sql = "UPDATE user SET u_name=?, u_lname=?, u_email=? WHERE u_email=?";
+                pstmt = conn.prepareStatement(sql);
+                pstmt.setString(1, fName);
+                pstmt.setString(2, lName);
+                pstmt.setString(3, newEmail);
+                pstmt.setString(4, currentEmail);
+            }
+
+            if (pstmt.executeUpdate() > 0) {
+                sess.setEmail(newEmail); // Update session email
+                JOptionPane.showMessageDialog(null, "Profile Updated Successfully!");
+                displayUserInfo(); 
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
+        }
+    
+    }//GEN-LAST:event_jButton3ActionPerformed
+
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+       javax.swing.JFileChooser chooser = new javax.swing.JFileChooser();
+        int result = chooser.showOpenDialog(null);
+        if (result == javax.swing.JFileChooser.APPROVE_OPTION) {
+            java.io.File sourceFile = chooser.getSelectedFile();
+            destinationPath = sourceFile.getAbsolutePath(); 
+            setProfileImage(destinationPath); // Preview
+            jButton3.setEnabled(true); // Enable Update
+            jButton4.setText("");
+        }
+    }//GEN-LAST:event_jButton4ActionPerformed
+
  
    public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(() -> {
@@ -240,18 +363,26 @@ public final class profile extends javax.swing.JFrame {
    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel email;
+    private javax.swing.JLabel firstname;
     private javax.swing.JButton home;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton3;
+    private javax.swing.JButton jButton4;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
+    private javax.swing.JTextField jTextField1;
+    private javax.swing.JTextField jTextField2;
+    private javax.swing.JTextField jTextField3;
+    private javax.swing.JTextField jTextField4;
+    private javax.swing.JLabel lastname;
     private javax.swing.JButton logout;
     private javax.swing.JButton profile;
+    private javax.swing.JLabel role;
     private javax.swing.JButton usertable;
     // End of variables declaration//GEN-END:variables
 

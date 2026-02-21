@@ -61,14 +61,14 @@ public class worder extends javax.swing.JFrame {
         int rowIndex = jTable1.getSelectedRow();
         
         if (rowIndex < 0) {
-            JOptionPane.showMessageDialog(null, "Palihug pilia una ang order sa table!");
+            JOptionPane.showMessageDialog(null, "Please select the order from the table first!");
             return;
         }
         
         TableModel model = jTable1.getModel();
         String id = model.getValueAt(rowIndex, 0).toString(); 
         
-        int confirm = JOptionPane.showConfirmDialog(null, "Sigurado ka nga i-" + newStatus + " ni?", "Confirmation", JOptionPane.YES_NO_OPTION);
+        int confirm = JOptionPane.showConfirmDialog(null, "Are you sure you want to " + newStatus + " this?", "Confirmation", JOptionPane.YES_NO_OPTION);
         
         if (confirm == JOptionPane.YES_OPTION) {
             // Gamiton nato ang updateRecord gikan sa imong config class

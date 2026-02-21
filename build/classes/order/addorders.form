@@ -64,16 +64,19 @@
                               <Component id="jLabel6" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                              <Component id="customername" alignment="0" max="32767" attributes="0"/>
-                              <Component id="phonenumber" alignment="0" max="32767" attributes="0"/>
-                              <Component id="address" alignment="0" max="32767" attributes="0"/>
-                              <Component id="quantity" alignment="0" max="32767" attributes="0"/>
-                              <Component id="totalammount" alignment="0" max="32767" attributes="0"/>
-                              <Component id="orderstatus" alignment="0" pref="179" max="32767" attributes="0"/>
-                              <Component id="item" alignment="0" max="32767" attributes="0"/>
-                              <Component id="assignworker" alignment="0" max="32767" attributes="0"/>
-                              <Component id="date" max="32767" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                  <Component id="customername" alignment="0" max="32767" attributes="0"/>
+                                  <Component id="phonenumber" alignment="0" max="32767" attributes="0"/>
+                                  <Component id="address" alignment="0" max="32767" attributes="0"/>
+                                  <Component id="quantity" alignment="0" max="32767" attributes="0"/>
+                                  <Component id="totalammount" alignment="0" max="32767" attributes="0"/>
+                                  <Component id="orderstatus" alignment="0" pref="179" max="32767" attributes="0"/>
+                                  <Component id="item" alignment="0" max="32767" attributes="0"/>
+                                  <Component id="assignworker" alignment="0" max="32767" attributes="0"/>
+                                  <Component id="date" max="32767" attributes="0"/>
+                              </Group>
+                              <Component id="id_field" min="-2" pref="37" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace max="32767" attributes="0"/>
                           <Group type="103" groupAlignment="0" max="-2" attributes="0">
@@ -142,6 +145,8 @@
                               <Component id="orderstatus" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="jLabel9" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="id_field" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="32767" attributes="0"/>
                       </Group>
                       <Group type="102" alignment="1" attributes="0">
@@ -315,6 +320,9 @@
         </Component>
         <Component class="javax.swing.JButton" name="save">
           <Properties>
+            <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+              <Color blue="99" green="99" red="99" type="rgb"/>
+            </Property>
             <Property name="text" type="java.lang.String" value="Save"/>
           </Properties>
           <Events>
@@ -342,11 +350,19 @@
         </Component>
         <Component class="javax.swing.JButton" name="back">
           <Properties>
+            <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+              <Color blue="99" green="99" red="99" type="rgb"/>
+            </Property>
             <Property name="text" type="java.lang.String" value="Back"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="backActionPerformed"/>
           </Events>
+          <AuxValues>
+            <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
+          </AuxValues>
+        </Component>
+        <Component class="javax.swing.JTextField" name="id_field">
           <AuxValues>
             <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
           </AuxValues>

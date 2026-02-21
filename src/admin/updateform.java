@@ -3,20 +3,38 @@ package admin;
 
 import config.config;
 import config.Session;
+import java.awt.Image;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.TableModel;
 
 
 
-
-
-
 public class updateform extends javax.swing.JFrame {
-    String userID;
+   String userID;
+    String destinationPath = "";
+    String oldImagePath = ""; // Para mahibal-an kung nausab ang image
     private javax.swing.JComboBox<String> roleCombo;
-    
- public updateform() {
-        // Session Check
+    private JLabel imageLabel;
+
+    public updateform() {
+        initComponents();
+        setupImageLabel();
+        addRoleSelection();
+        groupGenders();
+        applyButtonStyle(); // I-apply ang transparency
+        this.setLocationRelativeTo(null);
+
         Session sess = Session.getInstance();
         if (sess.getId() == 0) {
             JOptionPane.showMessageDialog(null, "Please Login First!");
@@ -25,124 +43,172 @@ public class updateform extends javax.swing.JFrame {
             return;
         }
 
-        initComponents(); // USA RA DAPAT KINI!
-        this.setLocationRelativeTo(null);
-        groupGenders();
-        addRoleSelection();
-        
-        // Visibility setup para sa ADD
         add.setVisible(true);
         cancel.setVisible(true);
         update.setVisible(false);
         jButton1.setVisible(false);
         jLabel5.setText("Add New User Profile");
+        
+        addFieldListeners();
     }
 
-    // 2. CONSTRUCTOR PARA SA "UPDATE"
     public updateform(TableModel model, int rowIndex) {
         initComponents();
-        this.setLocationRelativeTo(null);
+        setupImageLabel();
+        addRoleSelection();
         groupGenders();
-        
-        // Visibility setup para sa UPDATE
+        applyButtonStyle(); // I-apply ang transparency
+        this.setLocationRelativeTo(null);
+
         update.setVisible(true);
+        update.setEnabled(false); 
         jButton1.setVisible(true);
         add.setVisible(false);
         cancel.setVisible(false);
         userole.setVisible(false);
+        if (roleCombo != null) roleCombo.setVisible(false);
+
         jLabel5.setText("Update User Profile");
 
-        // Pag-load sa data gikan sa table
         try {
             userID = (model.getValueAt(rowIndex, 0) != null) ? model.getValueAt(rowIndex, 0).toString() : "";
-            jTextField1.setText(getSafeValue(model, rowIndex, 1)); 
-            jTextField3.setText(getSafeValue(model, rowIndex, 2)); 
-            jTextField2.setText(getSafeValue(model, rowIndex, 3)); 
-            jTextField4.setText(getSafeValue(model, rowIndex, 6)); 
-            
-            String currentGender = getSafeValue(model, rowIndex, 7);
-            if (currentGender.equalsIgnoreCase("Male")) {
-                jRadioButton1.setSelected(true);
-            } else if (currentGender.equalsIgnoreCase("Female")) {
-                jRadioButton2.setSelected(true);
+            jTextField1.setText(getSafeValue(model, rowIndex, 1));
+            jTextField3.setText(getSafeValue(model, rowIndex, 2));
+            jTextField2.setText(getSafeValue(model, rowIndex, 3));
+            jTextField4.setText(getSafeValue(model, rowIndex, 6));
+
+            config conf = new config();
+            java.sql.ResultSet rs = conf.getData("SELECT u_pass, u_image FROM user WHERE u_id = '" + userID + "'");
+            if (rs.next()) {
+                jTextField5.setText(rs.getString("u_pass"));
+                oldImagePath = rs.getString("u_image");
+                destinationPath = oldImagePath;
+                if (destinationPath != null && !destinationPath.isEmpty()) {
+                    displayImage(destinationPath);
+                }
             }
+
+            String currentGender = getSafeValue(model, rowIndex, 7);
+            if (currentGender.equalsIgnoreCase("Male")) jRadioButton1.setSelected(true);
+            else if (currentGender.equalsIgnoreCase("Female")) jRadioButton2.setSelected(true);
+
         } catch (Exception e) {
             System.out.println("Error Loading Data: " + e.getMessage());
         }
+
+        addFieldListeners();
     }
 
-    private void addRoleSelection() {
-        roleCombo = new javax.swing.JComboBox<>();
-        roleCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Select Role", "admin", "worker"}));
-        jPanel1.setLayout(null); 
-        roleCombo.setBounds(120, 285, 150, 30); 
-        jPanel1.add(roleCombo);
-        jPanel1.revalidate();
-        jPanel1.repaint();
+    // KINI NGA METHOD MAGHIMO SA BUTTON NGA TRANSPARENT OVERLAY
+    private void applyButtonStyle() {
+        jButton2.setOpaque(false);
+        jButton2.setContentAreaFilled(false);
+        jButton2.setBorderPainted(false);
+        jButton2.setText("UPLOAD PHOTO");
     }
 
-    private String getSafeValue(TableModel model, int row, int col) {
-        return (model.getValueAt(row, col) != null) ? model.getValueAt(row, col).toString() : "";
+    private void addFieldListeners() {
+        DocumentListener dl = new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { update.setEnabled(true); }
+            @Override public void removeUpdate(DocumentEvent e) { update.setEnabled(true); }
+            @Override public void changedUpdate(DocumentEvent e) { update.setEnabled(true); }
+        };
+        jTextField1.getDocument().addDocumentListener(dl);
+        jTextField2.getDocument().addDocumentListener(dl);
+        jTextField3.getDocument().addDocumentListener(dl);
+        jTextField4.getDocument().addDocumentListener(dl);
+        jTextField5.getDocument().addDocumentListener(dl);
+        
+        jRadioButton1.addActionListener(e -> update.setEnabled(true));
+        jRadioButton2.addActionListener(e -> update.setEnabled(true));
     }
 
-    private void groupGenders() {
-        // Siguraduha nga ang radio buttons naa sa buttonGroup2 para usa ra mapili
-        buttonGroup2.add(jRadioButton1);
-        buttonGroup2.add(jRadioButton2);
+    private void setupImageLabel() {
+        jPanel2.setLayout(null); // Absolute Layout para mag-overlay
+        
+        imageLabel = new JLabel();
+        imageLabel.setBounds(0, 0, 140, 110);
+        imageLabel.setHorizontalAlignment(JLabel.CENTER);
+        
+        // I-adjust ang jButton2 bounds para mo-match sa label
+        jButton2.setBounds(0, 0, 140, 110);
+        
+        jPanel2.add(jButton2); // Button ang una para naa sa taas (clickable)
+        jPanel2.add(imageLabel);
+    }
+
+    public void displayImage(String path) {
+        try {
+            ImageIcon icon = new ImageIcon(path);
+            if (icon.getIconWidth() > 0) {
+                Image img = icon.getImage().getScaledInstance(imageLabel.getWidth(), imageLabel.getHeight(), Image.SCALE_SMOOTH);
+                imageLabel.setIcon(new ImageIcon(img));
+                imageLabel.setText("");
+                jButton2.setText(""); // Kuhaon ang text para dili sagabal sa image
+            } else {
+                imageLabel.setIcon(null);
+                jButton2.setText("UPLOAD PHOTO");
+            }
+        } catch (Exception e) {
+            jButton2.setText("UPLOAD PHOTO");
+        }
     }
 
     private void actionSave(String mode) {
-    String f = jTextField1.getText().trim();  // First Name
-    String l = jTextField3.getText().trim();  // Last Name
-    String e = jTextField2.getText().trim();  // Email
-    String p = jTextField5.getText().trim();  // PASSWORD (u_pass)
-    String a = jTextField4.getText().trim();  // Address
-    
-    String g = "";
-    if (jRadioButton1.isSelected()) g = "Male";
-    else if (jRadioButton2.isSelected()) g = "Female";
+        String f = jTextField1.getText().trim();
+        String l = jTextField3.getText().trim();
+        String e = jTextField2.getText().trim();
+        String p = jTextField5.getText().trim();
+        String a = jTextField4.getText().trim();
+        String g = jRadioButton1.isSelected() ? "Male" : (jRadioButton2.isSelected() ? "Female" : "");
 
-    // 1. Validation - Giapil ang 'p' para dili pwede ang blanko nga password
-    if (f.isEmpty() || l.isEmpty() || e.isEmpty() || p.isEmpty() || a.isEmpty() || g.isEmpty()) {
-        JOptionPane.showMessageDialog(null, "Please fill up all fields including Password!");
-        return; 
-    }
-
-    config conf = new config();
-    String checkID = (mode.equals("ADD")) ? "" : userID;
-    
-    if (conf.isEmailExisting(e, checkID)) {
-        JOptionPane.showMessageDialog(null, "Error: Email '" + e + "' is already taken!");
-        return;
-    }
-
-    if (mode.equals("ADD")) {
-        if(roleCombo == null || roleCombo.getSelectedItem().equals("Select Role")){
-            JOptionPane.showMessageDialog(null, "Please select a User Role!");
+        if (f.isEmpty() || l.isEmpty() || e.isEmpty() || p.isEmpty() || a.isEmpty() || g.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Please fill up all fields!");
             return;
         }
-        String role = roleCombo.getSelectedItem().toString();
-        
-        // GIGAMIT ANG 'u_pass' SA SQL INSERT
-        String sql = "INSERT INTO user (u_name, u_lname, u_email, u_pass, u_address, u_gender, u_role, u_status) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')";
-        
-        // Siguraduha nga sakto ang order sa parameters (f, l, e, p, a, g, role)
-        conf.updateRecord(sql, f, l, e, p, a, g, role);
-        JOptionPane.showMessageDialog(null, "User Added Successfully!");
-        
-    } else {
-        // GIGAMIT ANG 'u_pass' SA SQL UPDATE
-        String sql = "UPDATE user SET u_name = ?, u_lname = ?, u_email = ?, u_pass = ?, u_address = ?, u_gender = ? WHERE u_id = ?";
-        
-        conf.updateRecord(sql, f, l, e, p, a, g, userID);
-        JOptionPane.showMessageDialog(null, "User Updated Successfully!");
-    }
 
-    // Balik sa table
-    new usertable().setVisible(true);
-    this.dispose();;
-    
+        // LOGIC PARA SA PAG-COPY SA IMAGE SA FOLDER (Gikan sa Profile code nimo)
+        String finalPath = destinationPath;
+        if (destinationPath != null && !destinationPath.equals(oldImagePath)) {
+            try {
+                File sourceFile = new File(destinationPath);
+                File destFolder = new File("src/user_images/");
+                if (!destFolder.exists()) destFolder.mkdirs();
+
+                String fileName = System.currentTimeMillis() + "_" + sourceFile.getName();
+                Path target = Paths.get("src/user_images/" + fileName);
+                Files.copy(sourceFile.toPath(), target, StandardCopyOption.REPLACE_EXISTING);
+                finalPath = "src/user_images/" + fileName;
+            } catch (Exception ex) {
+                System.out.println("Image Copy Error: " + ex.getMessage());
+            }
+        }
+
+        config conf = new config();
+        String checkID = (mode.equals("ADD")) ? "" : userID;
+
+        if (conf.isEmailExisting(e, checkID)) {
+            JOptionPane.showMessageDialog(null, "Error: Email is already taken!");
+            return;
+        }
+
+        if (mode.equals("ADD")) {
+            if (roleCombo.getSelectedItem().equals("Select Role")) {
+                JOptionPane.showMessageDialog(null, "Please select a User Role!");
+                return;
+            }
+            String role = roleCombo.getSelectedItem().toString();
+            String sql = "INSERT INTO user (u_name, u_lname, u_email, u_pass, u_address, u_gender, u_role, u_status, u_image) VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', ?)";
+            conf.updateRecord(sql, f, l, e, p, a, g, role, finalPath);
+            JOptionPane.showMessageDialog(null, "User Added Successfully!");
+        } else {
+            String sql = "UPDATE user SET u_name=?, u_lname=?, u_email=?, u_pass=?, u_address=?, u_gender=?, u_image=? WHERE u_id=?";
+            conf.updateRecord(sql, f, l, e, p, a, g, finalPath, userID);
+            JOptionPane.showMessageDialog(null, "User Updated Successfully!");
+        }
+
+        new usertable().setVisible(true);
+        this.dispose();
     }
     
     
@@ -169,6 +235,7 @@ public class updateform extends javax.swing.JFrame {
         jButton1 = new javax.swing.JButton();
         cancel = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
+        jButton2 = new javax.swing.JButton();
         jLabel6 = new javax.swing.JLabel();
         jTextField5 = new javax.swing.JTextField();
 
@@ -271,15 +338,25 @@ public class updateform extends javax.swing.JFrame {
 
         jPanel2.setBackground(new java.awt.Color(204, 204, 204));
 
+        jButton2.setText("UPLOAD PHOTO");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 140, Short.MAX_VALUE)
+            .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, 140, Short.MAX_VALUE)
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 110, Short.MAX_VALUE)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGap(43, 43, 43)
+                .addComponent(jButton2)
+                .addContainerGap(42, Short.MAX_VALUE))
         );
 
         jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(320, 50, 140, 110));
@@ -355,13 +432,40 @@ public class updateform extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextField5ActionPerformed
 
-    /**
-     * @param args the command line arguments
-     */
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+     JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Images", "jpg", "png", "jpeg");
+        fileChooser.setFileFilter(filter);
+        int result = fileChooser.showOpenDialog(null);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            destinationPath = selectedFile.getAbsolutePath();
+            displayImage(destinationPath);
+            update.setEnabled(true);
+    }//GEN-LAST:event_jButton2ActionPerformed
+    }
+    private void addRoleSelection() {
+        if (roleCombo == null) {
+            roleCombo = new javax.swing.JComboBox<>();
+            roleCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Select Role", "admin", "worker"}));
+            jPanel1.add(roleCombo, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 285, 150, 30));
+            roleCombo.addActionListener(e -> update.setEnabled(true));
+        }
+    }
+
+    private void groupGenders() {
+        buttonGroup2.add(jRadioButton1);
+        buttonGroup2.add(jRadioButton2);
+    }
+
+    private String getSafeValue(TableModel model, int row, int col) {
+        return (model.getValueAt(row, col) != null) ? model.getValueAt(row, col).toString() : "";
+    }
+    
+    
     public static void main(String args[]) {
    java.awt.EventQueue.invokeLater(() -> {
             new updateform().setVisible(true);
-        
         });
             
     
@@ -372,6 +476,7 @@ public class updateform extends javax.swing.JFrame {
     private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.JButton cancel;
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

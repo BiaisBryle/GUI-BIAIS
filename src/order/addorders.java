@@ -3,13 +3,12 @@ package order;
 
 import config.config;
 import javax.swing.JOptionPane;
-import java.sql.ResultSet;    // Kinahanglan para sa pag-read sa data
+import java.sql.ResultSet;
 import java.sql.SQLException;
-
 
 public class addorders extends javax.swing.JFrame {
 
-  public addorders() {
+ public addorders() {
         initComponents();
         this.setLocationRelativeTo(null);
         
@@ -25,26 +24,29 @@ public class addorders extends javax.swing.JFrame {
         totalammount.setEditable(false);
         orderstatus.setText("Pending");
         orderstatus.setEditable(false);
+        
+        // I-hide ang id_field para dili samok sa GUI
+        id_field.setVisible(false);
     }
 
-   private void loadWorkers() {
-    config conf = new config();
-    try {
-        // Gigamit na nato ang 'u_role' imbes 'u_type'
-        String sql = "SELECT u_id, u_name FROM user WHERE u_status = 'approved' AND u_role = 'worker'";
-        java.sql.ResultSet rs = conf.getData(sql);
-        
-        assignworker.removeAllItems();
-        assignworker.addItem("Select Worker");
-        
-        while (rs.next()) {
-            // "1 - Juan" ang format nga isulod sa ComboBox
-            String workerDisplay = rs.getString("u_id") + " - " + rs.getString("u_name");
-            assignworker.addItem(workerDisplay);
+    private void loadWorkers() {
+        config conf = new config();
+        try {
+            // Siguraduhon nga ang table name ug column names match sa imong DB
+            String sql = "SELECT u_id, u_name FROM user WHERE u_status = 'approved' AND u_role = 'worker'";
+            ResultSet rs = conf.getData(sql);
+            
+            assignworker.removeAllItems();
+            assignworker.addItem("Select worker");
+            
+            while (rs.next()) {
+                // Gigamit ang u_fname para match sa imong previous screenshot
+                String workerDisplay = rs.getString("u_id") + " - " + rs.getString("u_name");
+                assignworker.addItem(workerDisplay);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error Loading Workers: " + e.getMessage());
         }
-    } catch (java.sql.SQLException e) {
-        System.out.println("Error Loading Workers: " + e.getMessage());
-    }
     }
 
     private void updateFinalTotal() {
@@ -73,19 +75,6 @@ public class addorders extends javax.swing.JFrame {
             totalammount.setText("0.00");
         }
     }
-    
-    private void clearFields() {
-        customername.setText("");
-        phonenumber.setText("");
-        address.setText("");
-        quantity.setText("");
-        totalammount.setText("0.00");
-        date.setText("");
-        item.setSelectedIndex(0);
-        assignworker.setSelectedIndex(0);
-        orderstatus.setText("Pending");
-    }
-
 
 
    
@@ -115,6 +104,7 @@ public class addorders extends javax.swing.JFrame {
         jLabel10 = new javax.swing.JLabel();
         date = new javax.swing.JTextField();
         back = new javax.swing.JButton();
+        id_field = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -197,6 +187,7 @@ public class addorders extends javax.swing.JFrame {
 
         assignworker.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
+        save.setBackground(new java.awt.Color(153, 153, 153));
         save.setText("Save");
         save.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -213,6 +204,7 @@ public class addorders extends javax.swing.JFrame {
             }
         });
 
+        back.setBackground(new java.awt.Color(153, 153, 153));
         back.setText("Back");
         back.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -243,16 +235,18 @@ public class addorders extends javax.swing.JFrame {
                             .addComponent(jLabel4)
                             .addComponent(jLabel6))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(customername)
-                            .addComponent(phonenumber)
-                            .addComponent(address)
-                            .addComponent(quantity)
-                            .addComponent(totalammount)
-                            .addComponent(orderstatus, javax.swing.GroupLayout.DEFAULT_SIZE, 179, Short.MAX_VALUE)
-                            .addComponent(item, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(assignworker, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(date))
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addComponent(customername)
+                                .addComponent(phonenumber)
+                                .addComponent(address)
+                                .addComponent(quantity)
+                                .addComponent(totalammount)
+                                .addComponent(orderstatus, javax.swing.GroupLayout.DEFAULT_SIZE, 179, Short.MAX_VALUE)
+                                .addComponent(item, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(assignworker, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(date))
+                            .addComponent(id_field, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(back, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -304,6 +298,8 @@ public class addorders extends javax.swing.JFrame {
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(orderstatus, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel9))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(id_field, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -352,54 +348,53 @@ public class addorders extends javax.swing.JFrame {
     }//GEN-LAST:event_orderstatusActionPerformed
 
     private void saveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveActionPerformed
-  config conf = new config();
-    
-    // 1. KUHAON ANG MGA INPUTS
-    String name = customername.getText();
-    String phone = phonenumber.getText();
-    String addr = address.getText();
-    String selectedItem = item.getSelectedItem().toString();
-    String qty = quantity.getText();
-    String d = date.getText();
-    String status = orderstatus.getText();
-    String total = totalammount.getText();
 
-    // 2. KANI ANG IMONG PANGUTANA (Ang pagkuha sa ngalan lang)
-    // Kuhaon ang text sa JComboBox (pananglitan: "1 - Juan")
-    String fullWorkerInfo = assignworker.getSelectedItem().toString();
-    String workerNameOnly = "";
+        
+        config conf = new config();
+        
+        String name = customername.getText().trim();
+        String phone = phonenumber.getText().trim();
+        String addr = address.getText().trim();
+        String selectedItem = item.getSelectedItem().toString();
+        String qty = quantity.getText().trim();
+        String d = date.getText().trim();
+        String status = orderstatus.getText().trim();
+        String total = totalammount.getText().trim();
 
-    // Atong i-check kon dili ba "Select Worker" ang napili
-    if (!fullWorkerInfo.equals("Select Worker")) {
-        // I-split ang string gamit ang " - "
-        // Ang [0] kay ang ID, ang [1] kay ang Ngalan
-        String[] parts = fullWorkerInfo.split(" - ");
-        if (parts.length > 1) {
-            workerNameOnly = parts[1]; // Kani ang "Juan"
-        } else {
-            workerNameOnly = fullWorkerInfo;
+        // Pagkuha sa Worker Name lang (Split ID - Name)
+        Object selectedWorker = assignworker.getSelectedItem();
+        String workerNameOnly = "";
+
+        if (selectedWorker != null && !selectedWorker.toString().equals("Select Worker")) {
+            String fullWorkerInfo = selectedWorker.toString();
+            String[] parts = fullWorkerInfo.split(" - ");
+            workerNameOnly = (parts.length > 1) ? parts[1] : fullWorkerInfo;
         }
-    }
 
-    // 3. VALIDATION
-    if(name.isEmpty() || workerNameOnly.isEmpty()){
-        JOptionPane.showMessageDialog(this, "Palihog pili og Worker!");
-        return;
-    }
+        // Validation
+        if (name.isEmpty() || workerNameOnly.isEmpty() || qty.isEmpty() || selectedItem.equals("Select Item")) {
+            JOptionPane.showMessageDialog(this, "Palihog kompletoha ang fields!");
+            return;
+        }
 
-    // 4. I-SAVE SA DATABASE
-    // Gamiton nato ang 'workerNameOnly' para mo-match sa worder frame
-    String sql = "INSERT INTO OrdersTable (customer_name, phone_number, address, item, quantity, worker, total_amount, order_date, order_status) "
-               + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    
-    conf.addRecord(sql, name, phone, addr, selectedItem, qty, workerNameOnly, total, d, status);
-    
-    JOptionPane.showMessageDialog(this, "Successfully Saved!");
-    
-    // Balik sa Dashboard
-    orders ord = new orders(); 
-    ord.setVisible(true);
-    this.dispose();
+        if (save.getText().equals("Save")) {
+            // INSERT LOGIC
+            String sql = "INSERT INTO OrdersTable (customer_name, phone_number, address, item, quantity, worker, total_amount, order_date, order_status) "
+                       + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            conf.addRecord(sql, name, phone, addr, selectedItem, qty, workerNameOnly, total, d, status);
+            JOptionPane.showMessageDialog(this, "Order Successfully Saved!");
+        } 
+        else if (save.getText().equals("Update")) {
+            // UPDATE LOGIC
+            String sql = "UPDATE OrdersTable SET customer_name=?, phone_number=?, address=?, item=?, quantity=?, worker=?, total_amount=?, order_date=?, order_status=? WHERE o_id=?";
+            conf.updateRecord(sql, name, phone, addr, selectedItem, qty, workerNameOnly, total, d, status, id_field.getText());
+            JOptionPane.showMessageDialog(this, "Order Successfully Updated!");
+        }
+
+        // Balik sa Orders Frame
+        orders ord = new orders(); 
+        ord.setVisible(true);
+        this.dispose();
 
     }//GEN-LAST:event_saveActionPerformed
 
@@ -466,6 +461,7 @@ public class addorders extends javax.swing.JFrame {
     public javax.swing.JButton back;
     public javax.swing.JTextField customername;
     public javax.swing.JTextField date;
+    public javax.swing.JTextField id_field;
     public javax.swing.JComboBox<String> item;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;

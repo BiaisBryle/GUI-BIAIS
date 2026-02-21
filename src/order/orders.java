@@ -8,35 +8,33 @@ import admin.usertable;
 import config.config;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JOptionPane;
-import java.sql.ResultSet;    // IMPORTANTE: Para sa ResultSet
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.swing.table.TableModel;
 
 
 public class orders extends javax.swing.JFrame {
 
-
-   public orders() {
+public orders() {
         initComponents();
         displayTable(); 
-         this.setLocationRelativeTo(null); // Load data as soon as the window opens
+        this.setLocationRelativeTo(null);
     }
-   
+    
     public void displayTable() {
         String searchTerm = jTextField1.getText(); 
-    
-    // USBA ANG "deliveries" PADULONG SA "orders" (o kung unsa man ang saktong ngalan sa imong table)
-    String sql = "SELECT o_id, customer_name, address, order_status FROM OrdersTable "
-               + "WHERE customer_name LIKE '%" + searchTerm + "%' "
-               + "OR address LIKE '%" + searchTerm + "%' "
-               + "OR o_id LIKE '%" + searchTerm + "%'";
+        // SQL Query para sa search functionality
+        String sql = "SELECT o_id, customer_name, address, order_status FROM OrdersTable "
+                   + "WHERE customer_name LIKE '%" + searchTerm + "%' "
+                   + "OR address LIKE '%" + searchTerm + "%' "
+                   + "OR o_id LIKE '%" + searchTerm + "%'";
 
-    try {
-        config conf = new config(); 
-        conf.displayData(sql, OrdersTable); 
-    } catch (Exception e) {
-        System.out.println("Error displaying data: " + e.getMessage());
-    }
+        try {
+            config conf = new config(); 
+            conf.displayData(sql, OrdersTable); 
+        } catch (Exception e) {
+            System.out.println("Error displaying data: " + e.getMessage());
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -198,53 +196,74 @@ public class orders extends javax.swing.JFrame {
 
     private void updateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateActionPerformed
        int rowIndex = OrdersTable.getSelectedRow();
-    
-    if(rowIndex < 0){
-        JOptionPane.showMessageDialog(null, "Palihog pili og row sa table!");
-    } else {
-        try {
-            config conf = new config();
-            TableModel model = OrdersTable.getModel();
-            ResultSet rs = conf.getData("SELECT * FROM OrdersTable WHERE o_id = '" + model.getValueAt(rowIndex, 0) + "'");
-            
-            if(rs.next()){
-                addorders addFrame = new addorders();
-                // I-fill ang fields sa addorders frame
-                addFrame.customername.setText(rs.getString("customer_name"));
-                addFrame.phonenumber.setText(rs.getString("phone_number"));
-                addFrame.address.setText(rs.getString("address"));
-                addFrame.quantity.setText(rs.getString("quantity"));
-                addFrame.totalammount.setText(rs.getString("total_amount"));
-                addFrame.date.setText(rs.getString("order_date"));
-                addFrame.orderstatus.setText(rs.getString("order_status"));
+
+        if(rowIndex < 0){
+            JOptionPane.showMessageDialog(null, "Palihog pili og row sa table!");
+        } else {
+            try {
+                config conf = new config();
+                TableModel model = OrdersTable.getModel();
+                String id = model.getValueAt(rowIndex, 0).toString();
                 
-                // Usba ang text sa button para mahibal-an nga Update kini
-                addFrame.save.setText("UPDATE");
-                addFrame.setVisible(true);
-                this.dispose();
+                ResultSet rs = conf.getData("SELECT * FROM OrdersTable WHERE o_id = '" + id + "'");
+                
+                if(rs.next()){
+                    addorders addFrame = new addorders();
+                    
+                    // I-load ang mga text fields
+                    addFrame.id_field.setText(rs.getString("o_id")); 
+                    addFrame.customername.setText(rs.getString("customer_name"));
+                    addFrame.phonenumber.setText(rs.getString("phone_number"));
+                    addFrame.address.setText(rs.getString("address"));
+                    addFrame.quantity.setText(rs.getString("quantity"));
+                    addFrame.totalammount.setText(rs.getString("total_amount"));
+                    addFrame.date.setText(rs.getString("order_date"));
+                    addFrame.orderstatus.setText(rs.getString("order_status"));
+                    
+                    // --- COMBO BOX LOGIC PARA SA UPDATE ---
+                    String currentItem = rs.getString("item").trim();
+                    String currentWorkerName = rs.getString("worker").trim();
+
+                    addFrame.item.setSelectedItem(currentItem);
+
+                    // Para sa worker, kay "ID - Name" man ang format sa ComboBox:
+                    for (int i = 0; i < addFrame.assignworker.getItemCount(); i++) {
+                        String itemText = addFrame.assignworker.getItemAt(i).toString();
+                        if (itemText.contains(currentWorkerName)) {
+                            addFrame.assignworker.setSelectedIndex(i);
+                            break;
+                        }
+                    }
+                    
+                    addFrame.save.setText("Update"); // Usba ang button text
+                    addFrame.setVisible(true);
+                    this.dispose();
+                }
+            } catch(SQLException e) {
+                JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
             }
-        } catch(SQLException e) {
-            System.out.println("Error: " + e.getMessage());
         }
-    }
+
+    
     }//GEN-LAST:event_updateActionPerformed
     
     private void deleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteActionPerformed
-       int rowIndex = OrdersTable.getSelectedRow();
+      int rowIndex = OrdersTable.getSelectedRow();
     
-    if(rowIndex < 0){
-        JOptionPane.showMessageDialog(null, "Palihog pili og row nga papason!");
-    } else {
-        int response = JOptionPane.showConfirmDialog(null, "Sigurado ka nga papason kini?", "Confirm", JOptionPane.YES_NO_OPTION);
+        if(rowIndex < 0){
+            JOptionPane.showMessageDialog(null, "Palihog pili og row nga papason!");
+        } else {
+            int response = JOptionPane.showConfirmDialog(null, "Sigurado ka nga papason kini?", "Confirm", JOptionPane.YES_NO_OPTION);
+            
+            if(response == JOptionPane.YES_OPTION){
+                config conf = new config();
+                TableModel model = OrdersTable.getModel();
+                String id = model.getValueAt(rowIndex, 0).toString();
+                conf.deleteRecord("DELETE FROM OrdersTable WHERE o_id = ?", id);
+                displayTable(); 
+            }
         
-        if(response == JOptionPane.YES_OPTION){
-            config conf = new config();
-            TableModel model = OrdersTable.getModel();
-            String id = model.getValueAt(rowIndex, 0).toString();
-            conf.deleteRecord("DELETE FROM OrdersTable WHERE o_id = ?", id);
-            displayTable(); // Refresh ang table
         }
-    }
     }//GEN-LAST:event_deleteActionPerformed
 
     private void homeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_homeActionPerformed
