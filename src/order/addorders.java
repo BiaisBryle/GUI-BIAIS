@@ -12,35 +12,44 @@ public class addorders extends javax.swing.JFrame {
         initComponents();
         this.setLocationRelativeTo(null);
         
-        // 1. I-load ang Approved Workers sa ComboBox
+        // 1. I-load ang workers gikan sa database
         loadWorkers();
         
-        // 2. I-set ang ComboBox para sa Items
-        item.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { 
-            "Select Item", "US", "P1", "P2", "P3", "P4", "OS" 
-        }));
+        // 2. I-load ang mga items gikan sa imong Master List table
+        loadItemsFromMasterlist();
         
         // 3. I-set ang automatic fields
         totalammount.setEditable(false);
         orderstatus.setText("Pending");
         orderstatus.setEditable(false);
-        
-        // I-hide ang id_field para dili samok sa GUI
         id_field.setVisible(false);
     }
 
+    // KUHAON ANG ITEMS GIKAN SA MASTERLIST TABLE PARA SA COMBOBOX
+    private void loadItemsFromMasterlist() {
+        config conf = new config();
+        try {
+            String sql = "SELECT p_item FROM masterlist";
+            ResultSet rs = conf.getData(sql);
+            item.removeAllItems();
+            item.addItem("Select Item");
+            while (rs.next()) {
+                item.addItem(rs.getString("p_item"));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error Loading Items: " + e.getMessage());
+        }
+    }
+
+    // KUHAON ANG APPROVED WORKERS
     private void loadWorkers() {
         config conf = new config();
         try {
-            // Siguraduhon nga ang table name ug column names match sa imong DB
             String sql = "SELECT u_id, u_name FROM user WHERE u_status = 'approved' AND u_role = 'worker'";
             ResultSet rs = conf.getData(sql);
-            
             assignworker.removeAllItems();
             assignworker.addItem("Select worker");
-            
             while (rs.next()) {
-                // Gigamit ang u_fname para match sa imong previous screenshot
                 String workerDisplay = rs.getString("u_id") + " - " + rs.getString("u_name");
                 assignworker.addItem(workerDisplay);
             }
@@ -49,21 +58,30 @@ public class addorders extends javax.swing.JFrame {
         }
     }
 
+    // AUTOMATIC NGA PRESYO GIKAN SA MASTERLIST DILI NA HARDCODED
     private void updateFinalTotal() {
-        String selectedItem = item.getSelectedItem().toString();
-        double price = 0;
+        // 1. I-check kung null ba ang napili (Kini ang fix sa NullPointerException)
+    if (item.getSelectedItem() == null) {
+        return; 
+    }
 
-        switch(selectedItem) {
-            case "US": price = 2000; break;
-            case "P1": price = 2200; break;
-            case "P2": price = 2500; break;
-            case "P3": price = 2800; break;
-            case "P4": price = 3400; break;
-            case "OS": price = 3700; break;
-            default: price = 0; break;
-        }
+    String selectedItem = item.getSelectedItem().toString();
 
-        try {
+    // 2. Ayaw ipadayon kung "Select Item" ang napili
+    if (selectedItem.equals("Select Item") || selectedItem.isEmpty()) {
+        totalammount.setText("0.00");
+        return;
+    }
+
+    config conf = new config();
+    try {
+        String sql = "SELECT p_price FROM masterlist WHERE p_item = '" + selectedItem + "'";
+        ResultSet rs = conf.getData(sql);
+        
+        if (rs.next()) {
+            // Siguraduha nga ang "p_price" dili null sa DB
+            double price = rs.getDouble("p_price");
+            
             if (!quantity.getText().isEmpty()) {
                 int qty = Integer.parseInt(quantity.getText());
                 double total = price * qty;
@@ -71,9 +89,10 @@ public class addorders extends javax.swing.JFrame {
             } else {
                 totalammount.setText("0.00");
             }
-        } catch (NumberFormatException e) {
-            totalammount.setText("0.00");
         }
+    } catch (SQLException | NumberFormatException e) {
+        totalammount.setText("0.00");
+    }
     }
 
 
@@ -349,52 +368,91 @@ public class addorders extends javax.swing.JFrame {
 
     private void saveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveActionPerformed
 
-        
         config conf = new config();
+    
+    String name = customername.getText().trim();
+    String phone = phonenumber.getText().trim();
+    String addr = address.getText().trim();
+    String selectedItem = (item.getSelectedItem() != null) ? item.getSelectedItem().toString() : "";
+    String qtyText = quantity.getText().trim();
+    String total = totalammount.getText().trim();
+    String d = date.getText().trim();
+    String status = orderstatus.getText().trim();
+    String id = id_field.getText(); // Importante kini para sa Update
+
+    Object selectedWorker = assignworker.getSelectedItem();
+    String workerNameOnly = (selectedWorker != null && !selectedWorker.toString().equals("Select worker")) 
+                            ? selectedWorker.toString().split(" - ")[1] : "";
+
+    if (name.isEmpty() || qtyText.isEmpty() || selectedItem.equals("Select Item")) {
+        JOptionPane.showMessageDialog(this, "Please fill out all the fields!");
+        return;
+    }
+
+    try {
+        int newOrderQty = Integer.parseInt(qtyText);
         
-        String name = customername.getText().trim();
-        String phone = phonenumber.getText().trim();
-        String addr = address.getText().trim();
-        String selectedItem = item.getSelectedItem().toString();
-        String qty = quantity.getText().trim();
-        String d = date.getText().trim();
-        String status = orderstatus.getText().trim();
-        String total = totalammount.getText().trim();
+        // 1. KUHAON ANG CURRENT STOCK SA MASTERLIST
+        String checkStockSql = "SELECT p_quantity FROM masterlist WHERE p_item = '" + selectedItem + "'";
+        ResultSet rsStock = conf.getData(checkStockSql);
+        
+        if (rsStock.next()) {
+            int currentMasterStock = rsStock.getInt("p_quantity");
 
-        // Pagkuha sa Worker Name lang (Split ID - Name)
-        Object selectedWorker = assignworker.getSelectedItem();
-        String workerNameOnly = "";
+            // KUNG "UPDATE" ANG BUTTON (Nag-edit og existing order)
+            if (save.getText().equals("Update")) {
+                // A. Kuhaon ang DAAN nga quantity gikan sa OrdersTable sa wala pa gi-edit
+                String oldQtySql = "SELECT quantity FROM OrdersTable WHERE o_id = '" + id + "'";
+                ResultSet rsOld = conf.getData(oldQtySql);
+                
+                if (rsOld.next()) {
+                    int oldOrderQty = rsOld.getInt("quantity");
+                    
+                    // B. I-calculate ang adjustment
+                    // Pananglitan: Daang Order = 50, Bag-ong Order = 2. 
+                    // Adjustment = 50 - 2 = +48 (i-balik sa stock)
+                    int stockAdjustment = oldOrderQty - newOrderQty;
 
-        if (selectedWorker != null && !selectedWorker.toString().equals("Select Worker")) {
-            String fullWorkerInfo = selectedWorker.toString();
-            String[] parts = fullWorkerInfo.split(" - ");
-            workerNameOnly = (parts.length > 1) ? parts[1] : fullWorkerInfo;
+                    if (currentMasterStock + stockAdjustment < 0) {
+                        JOptionPane.showMessageDialog(this, "Cannot update! Not enough stock.");
+                        return;
+                    }
+
+                    // C. UPDATE ORDERSTABLE
+                    String updateOrderSql = "UPDATE OrdersTable SET customer_name=?, phone_number=?, address=?, item=?, quantity=?, worker=?, total_amount=?, order_date=? WHERE o_id=?";
+                    conf.updateRecord(updateOrderSql, name, phone, addr, selectedItem, String.valueOf(newOrderQty), workerNameOnly, total, d, id);
+
+                    // D. UPDATE MASTERLIST STOCK (Adjustment)
+                    int updatedMasterStock = currentMasterStock + stockAdjustment;
+                    String updateMasterSql = "UPDATE masterlist SET p_quantity = ? WHERE p_item = ?";
+                    conf.updateRecord(updateMasterSql, String.valueOf(updatedMasterStock), selectedItem);
+
+                    JOptionPane.showMessageDialog(this, "Order Updated & Stock Adjusted!");
+                }
+            } 
+            // KUNG "SAVE" ANG BUTTON (Bag-ong order)
+            else {
+                if (currentMasterStock < newOrderQty) {
+                    JOptionPane.showMessageDialog(this, "Insufficient stock!: " + currentMasterStock);
+                    return;
+                }
+
+                String insertSql = "INSERT INTO OrdersTable (customer_name, phone_number, address, item, quantity, worker, total_amount, order_date, order_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                conf.addRecord(insertSql, name, phone, addr, selectedItem, qtyText, workerNameOnly, total, d, status);
+
+                int updatedMasterStock = currentMasterStock - newOrderQty;
+                String updateMasterSql = "UPDATE masterlist SET p_quantity = ? WHERE p_item = ?";
+                conf.updateRecord(updateMasterSql, String.valueOf(updatedMasterStock), selectedItem);
+
+                JOptionPane.showMessageDialog(this, "Order Saved & Stock Deducted!");
+            }
+
+            new orders().setVisible(true);
+            this.dispose();
         }
-
-        // Validation
-        if (name.isEmpty() || workerNameOnly.isEmpty() || qty.isEmpty() || selectedItem.equals("Select Item")) {
-            JOptionPane.showMessageDialog(this, "Palihog kompletoha ang fields!");
-            return;
-        }
-
-        if (save.getText().equals("Save")) {
-            // INSERT LOGIC
-            String sql = "INSERT INTO OrdersTable (customer_name, phone_number, address, item, quantity, worker, total_amount, order_date, order_status) "
-                       + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            conf.addRecord(sql, name, phone, addr, selectedItem, qty, workerNameOnly, total, d, status);
-            JOptionPane.showMessageDialog(this, "Order Successfully Saved!");
-        } 
-        else if (save.getText().equals("Update")) {
-            // UPDATE LOGIC
-            String sql = "UPDATE OrdersTable SET customer_name=?, phone_number=?, address=?, item=?, quantity=?, worker=?, total_amount=?, order_date=?, order_status=? WHERE o_id=?";
-            conf.updateRecord(sql, name, phone, addr, selectedItem, qty, workerNameOnly, total, d, status, id_field.getText());
-            JOptionPane.showMessageDialog(this, "Order Successfully Updated!");
-        }
-
-        // Balik sa Orders Frame
-        orders ord = new orders(); 
-        ord.setVisible(true);
-        this.dispose();
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+    }
 
     }//GEN-LAST:event_saveActionPerformed
 
@@ -412,46 +470,15 @@ public class addorders extends javax.swing.JFrame {
     }//GEN-LAST:event_quantityKeyReleased
 
     private void backActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backActionPerformed
-      // USBA ang 'OrderDash' kung unsay saktong ngalan sa imong main order frame
-    orders ord = new orders(); 
-    ord.setVisible(true);
-    this.dispose(); // I-close kining 'addorders' nga frame
+     new orders().setVisible(true);
+        this.dispose();
 
 
     }//GEN-LAST:event_backActionPerformed
 
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(addorders.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(addorders.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(addorders.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(addorders.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new addorders().setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            new addorders().setVisible(true);
         });
     }
 
