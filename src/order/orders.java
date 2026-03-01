@@ -6,7 +6,6 @@ import admin.masterlist;
 import admin.profile;
 import admin.usertable;
 import config.config;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.JOptionPane;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,7 +14,7 @@ import javax.swing.table.TableModel;
 
 public class orders extends javax.swing.JFrame {
 
-public orders() {
+    public orders() {
         initComponents();
         displayTable(); 
         this.setLocationRelativeTo(null);
@@ -23,14 +22,16 @@ public orders() {
     
     public void displayTable() {
         String searchTerm = jTextField1.getText(); 
-        // SQL Query para sa search functionality
-        String sql = "SELECT o_id, customer_name, address, order_status FROM OrdersTable "
+        // SQL Query: Gi-update aron maapil ang tanang columns (item, quantity, etc.)
+        String sql = "SELECT o_id, customer_name, address, item, total_amount, order_status, worker_id, order_date FROM OrdersTable "
                    + "WHERE customer_name LIKE '%" + searchTerm + "%' "
                    + "OR address LIKE '%" + searchTerm + "%' "
-                   + "OR o_id LIKE '%" + searchTerm + "%'";
+                   + "OR o_id LIKE '%" + searchTerm + "%' "
+                   + "OR item LIKE '%" + searchTerm + "%'";
 
         try {
             config conf = new config(); 
+            // Ang imong config class kinahanglan naay method para sa pag-display sa data sa JTable
             conf.displayData(sql, OrdersTable); 
         } catch (Exception e) {
             System.out.println("Error displaying data: " + e.getMessage());
@@ -205,41 +206,39 @@ public orders() {
             TableModel model = OrdersTable.getModel();
             String id = model.getValueAt(rowIndex, 0).toString();
             
-            // 1. Kuhaon una nato ang status gikan sa pinili nga row sa table
-            // Siguroha nga ang column index (3) sakto sa imong table (o_id=0, name=1, address=2, status=3)
-            String status = model.getValueAt(rowIndex, 3).toString();
+            // Siguroha nga ang column index 5 mao ang status (o_id=0, name=1, address=2, item=3, total=4, status=5, worker=6, date=7)
+            String status = model.getValueAt(rowIndex, 5).toString();
 
-            // 2. CHECK: Kung Delivered na, dili na pwede i-update
             if(status.equalsIgnoreCase("Delivered")){
                 JOptionPane.showMessageDialog(null, "This order cannot be updated because it has already been DELIVERED!", "Warning", JOptionPane.WARNING_MESSAGE);
-                return; // Undangon ang process diri
+                return; 
             }
 
-            // 3. Kung dili Delivered, padayon sa pag-load sa data
             ResultSet rs = conf.getData("SELECT * FROM OrdersTable WHERE o_id = '" + id + "'");
             
             if(rs.next()){
                 addorders addFrame = new addorders();
                 
-                addFrame.id_field.setText(rs.getString("o_id")); 
+              
                 addFrame.customername.setText(rs.getString("customer_name"));
                 addFrame.phonenumber.setText(rs.getString("phone_number"));
                 addFrame.address.setText(rs.getString("address"));
-                addFrame.quantity.setText(rs.getString("quantity"));
                 addFrame.totalammount.setText(rs.getString("total_amount"));
-                addFrame.date.setText(rs.getString("order_date"));
                 addFrame.orderstatus.setText(rs.getString("order_status"));
+                addFrame.date.setText(rs.getString("order_date"));
                 
-                String currentItem = rs.getString("item").trim();
+                // I-load ang mga items ug worker
+                addFrame.setSelectedItems(rs.getString("item"), rs.getDouble("total_amount"));
+                
                 String currentWorkerName = rs.getString("worker").trim();
 
-                addFrame.item.setSelectedItem(currentItem);
-
                 for (int i = 0; i < addFrame.assignworker.getItemCount(); i++) {
-                    String itemText = addFrame.assignworker.getItemAt(i).toString();
-                    if (itemText.contains(currentWorkerName)) {
-                        addFrame.assignworker.setSelectedIndex(i);
-                        break;
+                    Object item = addFrame.assignworker.getItemAt(i);
+                    if (item instanceof WorkerItem) {
+                        if (((WorkerItem) item).name.equals(currentWorkerName)) {
+                            addFrame.assignworker.setSelectedIndex(i);
+                            break;
+                        }
                     }
                 }
                 
@@ -265,7 +264,6 @@ public orders() {
             config conf = new config();
             TableModel model = OrdersTable.getModel();
             
-            // 1. Kuhaa ang ID gikan sa table
             String id = model.getValueAt(rowIndex, 0).toString();
            
             String query = "SELECT item, quantity FROM OrdersTable WHERE o_id = '" + id + "'";
@@ -276,19 +274,19 @@ public orders() {
                 int qtyToReturn = rs.getInt("quantity");
 
                 int response = JOptionPane.showConfirmDialog(null, 
-                    "Are you sure you want to delete this?\\nStocks will be returned..." + qtyToReturn + " stocks of " + itemName + ".", 
+                    "Are you sure you want to delete this?\nStocks will be returned: " + qtyToReturn + " of " + itemName + ".", 
                     "Confirm Delete", JOptionPane.YES_NO_OPTION);
 
                 if(response == JOptionPane.YES_OPTION){
-                    // A. I-ADD BALIK ANG STOCK SA MASTERLIST
+                    // A. I-ADD BALIK ANG STOCK
                     String updateStockSql = "UPDATE masterlist SET p_quantity = p_quantity + ? WHERE p_item = ?";
-                    conf.updateRecord(updateStockSql, String.valueOf(qtyToReturn), itemName);
+                    conf.updateRecord(updateStockSql, qtyToReturn, itemName);
 
-                    // B. I-DELETE NA ANG ORDER RECORD
+                    // B. I-DELETE ANG RECORD
                     conf.deleteRecord("DELETE FROM OrdersTable WHERE o_id = ?", id);
 
                     JOptionPane.showMessageDialog(null, "Order deleted and stocks have been returned!");
-                    displayTable(); // Refresh ang table
+                    displayTable(); 
                 }
             }
         } catch (SQLException e) {
@@ -343,12 +341,7 @@ public orders() {
             java.util.logging.Logger.getLogger(orders.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new orders().setVisible(true);
-            }
-        });
+        
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -9,7 +9,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
 
-public class worder extends javax.swing.JFrame {
+public final class worder extends javax.swing.JFrame {
     config conf = new config();
     String currentworker = "";
 
@@ -21,29 +21,27 @@ public class worder extends javax.swing.JFrame {
     }
 
     public worder() {
-        initComponents();
-        this.setLocationRelativeTo(null);
-        // Kuhaon ang pangalan gikan sa Session
-        this.currentworker = Session.getInstance().getName(); 
-        displayOrders();
+       initComponents();
+    this.setLocationRelativeTo(null);
+   
+    this.currentworker = String.valueOf(Session.getInstance().getId()); 
+    displayOrders();
     }
 
     public void displayOrders() {
   
-    try {
+   try {
         String searchTerm = search.getText().trim();
         
+        // Siguraduhing may laman ang currentworker (dapat ito ay ID)
         if (currentworker == null || currentworker.isEmpty()) {
-            System.out.println("No worker logged in.");
+            System.out.println("No worker logged in or invalid ID.");
             return;
         }
 
-        /* Gidugangan nato ang:
-           1. CAST(total_amount AS CHAR) - para ma search ang presyo
-           2. order_status - para ma search ang status
-        */
-        String sql = "SELECT o_id, customer_name, phone_number, address, item, quantity, total_amount, order_status " +
-                     "FROM OrdersTable WHERE worker = '" + currentworker + "' " +
+        // BAGONG SQL QUERY: Gumamit ng worker_id (INT) sa halip na pangalan
+        String sql = "SELECT o_id, customer_name, phone_number, address, item, total_amount, order_status " +
+                     "FROM OrdersTable WHERE worker_id = " + currentworker + " " + // <--- Walang single quotes kung ID ay number sa DB
                      "AND order_status = 'Pending' " +
                      "AND (customer_name LIKE '%" + searchTerm + "%' " +
                      "OR item LIKE '%" + searchTerm + "%' " +
@@ -55,6 +53,8 @@ public class worder extends javax.swing.JFrame {
     } catch (Exception e) {
         System.out.println("Error display: " + e.getMessage());
     }
+
+
     }
 
     private void changeOrderStatus(String newStatus) {
@@ -77,7 +77,11 @@ public class worder extends javax.swing.JFrame {
             try {
                 conf.updateRecord(sql, newStatus, id);
                 JOptionPane.showMessageDialog(null, "Order Successfully " + newStatus);
-                displayOrders(); // Refresh ang table
+               displayOrders(); 
+        
+            transactions.displayTransactions();
+                
+                
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
             }
@@ -113,7 +117,7 @@ public class worder extends javax.swing.JFrame {
         ));
         jScrollPane1.setViewportView(jTable1);
 
-        jPanel1.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 60, 480, 290));
+        jPanel1.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 60, 470, 290));
 
         canceled.setBackground(new java.awt.Color(153, 153, 153));
         canceled.setText("CANCELED");
@@ -126,7 +130,7 @@ public class worder extends javax.swing.JFrame {
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
         jLabel1.setText("NEEDED TO DELIVER");
-        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 10, 240, -1));
+        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 240, -1));
 
         delivered.setBackground(new java.awt.Color(153, 153, 153));
         delivered.setText("DELIVERED");
@@ -147,7 +151,7 @@ public class worder extends javax.swing.JFrame {
                 searchKeyReleased(evt);
             }
         });
-        jPanel1.add(search, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 30, 140, -1));
+        jPanel1.add(search, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 30, 140, -1));
 
         back.setBackground(new java.awt.Color(153, 153, 153));
         back.setText("BACK");
