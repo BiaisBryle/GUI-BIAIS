@@ -4,31 +4,14 @@ package main;
 import config.config;
 import javax.swing.JOptionPane;
 
-
-public class register extends javax.swing.JFrame {
-    
-     private javax.swing.JComboBox<String> roleCombo;
+   
+  public class register extends javax.swing.JFrame {
 
     public register() {
         initComponents();
         this.setLocationRelativeTo(null);
-        addRoleSelection();
+       
     }
-        
-        
-
-   private void addRoleSelection() {
-    javax.swing.JLabel jLabelRole = new javax.swing.JLabel();
-    jLabelRole.setFont(new java.awt.Font("Tahoma", 0, 18)); // Match the other labels
-    jLabelRole.setText("User Role:");
-    // Placed at Y=280 to be below Password (which is at 230)
-    jPanel1.add(jLabelRole, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 280, -1, 20));
-
-    roleCombo = new javax.swing.JComboBox<>();
-    roleCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Select Role", "admin", "worker"}));
-    // Placed at Y=280 to align with the label
-    jPanel1.add(roleCombo, new org.netbeans.lib.awtextra.AbsoluteConstraints(330, 280, 120, 30));
-}
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -103,15 +86,15 @@ public class register extends javax.swing.JFrame {
         jPanel2.setBackground(new java.awt.Color(153, 153, 153));
         jPanel2.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        jLabel6.setText("Register");
+        jLabel6.setText("          Register");
         jLabel6.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jLabel6MouseClicked(evt);
             }
         });
-        jPanel2.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 0, 70, 30));
+        jPanel2.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 100, 30));
 
-        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 320, 100, 30));
+        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 280, 100, 30));
 
         jPanel3.setBackground(new java.awt.Color(245, 205, 208));
 
@@ -143,13 +126,16 @@ public class register extends javax.swing.JFrame {
                 jLabel8MouseClicked(evt);
             }
         });
-        jPanel1.add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(330, 360, 120, 10));
+        jPanel1.add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 320, 110, 20));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 500, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 480, Short.MAX_VALUE)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -164,28 +150,31 @@ public class register extends javax.swing.JFrame {
     }//GEN-LAST:event_jTextField2ActionPerformed
 
     private void jLabel6MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel6MouseClicked
-        String fname = jTextField2.getText();
-        String lname = jTextField3.getText();
-        String email = jTextField4.getText();
-        String pass  = jTextField5.getText();
-        String role  = roleCombo.getSelectedItem().toString();
+       String fname = jTextField2.getText().trim();
+        String lname = jTextField3.getText().trim();
+        String email = jTextField4.getText().trim();
+        String pass  = jTextField5.getText().trim();
 
-        if (fname.isEmpty() || lname.isEmpty() || email.isEmpty() || pass.isEmpty() || role.equals("Select Role")) {
+        // VALIDATION: Dili na kailangan i-check ang role kay automatic worker na
+        if (fname.isEmpty() || lname.isEmpty() || email.isEmpty() || pass.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please fill all fields!");
             return;
         }
 
         try {
-            String sql = "INSERT INTO user (u_name, u_lname, u_email, u_pass,u_status, u_role) VALUES (?,?, ?, ?, ?, ?)";
+            // SQL: Diretso na "worker" ang role ug "approved" ang status para magamit dayon
+            // O kung gusto nimo nga i-approve pa sa admin, usba ang "approved" sa "Pending"
+            String sql = "INSERT INTO user (u_name, u_lname, u_email, u_pass, u_status, u_role) VALUES (?, ?, ?, ?, ?, ?)";
             config conf = new config();
-            conf.addRecord(sql, fname, lname, email, pass, "Pending", role);
+            
+            // AUTOMATIC VALUES: Status = "approved", Role = "worker"
+            conf.addRecord(sql, fname, lname, email, pass, "Pending", "worker");
 
-            JOptionPane.showMessageDialog(this, "Registered Successfully!");
+            JOptionPane.showMessageDialog(this, "Registered Successfully as Worker!");
             clearFields();
 
         } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Database Error!");
+            JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
         }
     
     }//GEN-LAST:event_jLabel6MouseClicked
@@ -195,7 +184,6 @@ public class register extends javax.swing.JFrame {
         jTextField3.setText("");
         jTextField4.setText("");
         jTextField5.setText("");
-        roleCombo.setSelectedIndex(0);
     }
     
     

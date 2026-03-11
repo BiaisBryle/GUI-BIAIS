@@ -20,7 +20,8 @@ class WorkerItem {
 
     @Override
     public String toString() {
-        return name; // Display Name in ComboBox
+        // MAO NI ANG MAKITA SA DROPDOWN: ID ug Name
+        return id + " - " + name; 
     }
 
     public int getId() {
@@ -31,20 +32,18 @@ class WorkerItem {
 
 public class addorders extends javax.swing.JFrame {
 
-  // Variable to store items string from items frame
     private String selectedItemsList = "";
 
     public addorders() {
         initComponents();
         this.setLocationRelativeTo(null);
         
-        loadWorkers();
+        loadWorkers(); // Tawgon ang loadWorkers pag-start sa frame
         
         totalammount.setEditable(false);
         orderstatus.setText("Pending");
         orderstatus.setEditable(false);
         
-        // Set current date
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         date.setText(sdf.format(new Date()));
         date.setEditable(false);
@@ -161,6 +160,11 @@ public class addorders extends javax.swing.JFrame {
         });
 
         assignworker.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        assignworker.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                assignworkerActionPerformed(evt);
+            }
+        });
 
         save.setBackground(new java.awt.Color(153, 153, 153));
         save.setText("Save");
@@ -372,6 +376,10 @@ public class addorders extends javax.swing.JFrame {
         itemsFrame.setVisible(true);
         
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void assignworkerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_assignworkerActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_assignworkerActionPerformed
 
 
     

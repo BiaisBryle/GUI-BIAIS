@@ -80,6 +80,7 @@ public static void displayTransactions() {
         ));
         jScrollPane1.setViewportView(jTable1);
 
+        back.setBackground(new java.awt.Color(153, 153, 153));
         back.setText("Back");
         back.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

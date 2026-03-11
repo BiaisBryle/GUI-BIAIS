@@ -119,7 +119,7 @@ public class usertable extends javax.swing.JFrame {
         });
 
         approvedbotton.setBackground(new java.awt.Color(153, 153, 153));
-        approvedbotton.setText("Approved Botton");
+        approvedbotton.setText("Approved ");
         approvedbotton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 approvedbottonActionPerformed(evt);
