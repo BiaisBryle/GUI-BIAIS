@@ -1,4 +1,3 @@
-
 package Worker;
 
 import config.Session;
@@ -7,7 +6,6 @@ import java.sql.*;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
-
 
 public final class worder extends javax.swing.JFrame {
     config conf = new config();
@@ -21,74 +19,77 @@ public final class worder extends javax.swing.JFrame {
     }
 
     public worder() {
-       initComponents();
-    this.setLocationRelativeTo(null);
-   
-    this.currentworker = String.valueOf(Session.getInstance().getId()); 
-    displayOrders();
+        initComponents();
+        this.setLocationRelativeTo(null);
+        // Kuhaon ang ID sa worker gikan sa Session
+        this.currentworker = String.valueOf(Session.getInstance().getId()); 
+        displayOrders();
     }
 
     public void displayOrders() {
-  
-   try {
-        String searchTerm = search.getText().trim();
-        
-        // Siguraduhing may laman ang currentworker (dapat ito ay ID)
-        if (currentworker == null || currentworker.isEmpty()) {
-            System.out.println("No worker logged in or invalid ID.");
-            return;
+        try {
+            String searchTerm = search.getText().trim();
+            
+            if (currentworker == null || currentworker.isEmpty() || currentworker.equals("0")) {
+                System.out.println("No worker logged in or invalid ID.");
+                return;
+            }
+
+            // SQL Query aron ipakita ang Pending orders sa maong worker
+            String sql = "SELECT o_id, customer_name, phone_number, address, item, total_amount, order_status " +
+                         "FROM OrdersTable WHERE worker_id = " + currentworker + " " +
+                         "AND order_status = 'Pending' " +
+                         "AND (customer_name LIKE '%" + searchTerm + "%' " +
+                         "OR item LIKE '%" + searchTerm + "%' " +
+                         "OR order_status LIKE '%" + searchTerm + "%' " +
+                         "OR CAST(total_amount AS CHAR) LIKE '%" + searchTerm + "%')";
+            
+            config.displayData(sql, jTable1);
+            
+        } catch (Exception e) {
+            System.out.println("Error display: " + e.getMessage());
         }
-
-        // BAGONG SQL QUERY: Gumamit ng worker_id (INT) sa halip na pangalan
-        String sql = "SELECT o_id, customer_name, phone_number, address, item, total_amount, order_status " +
-                     "FROM OrdersTable WHERE worker_id = " + currentworker + " " + // <--- Walang single quotes kung ID ay number sa DB
-                     "AND order_status = 'Pending' " +
-                     "AND (customer_name LIKE '%" + searchTerm + "%' " +
-                     "OR item LIKE '%" + searchTerm + "%' " +
-                     "OR order_status LIKE '%" + searchTerm + "%' " +
-                     "OR CAST(total_amount AS CHAR) LIKE '%" + searchTerm + "%')";
-        
-        config.displayData(sql, jTable1);
-        
-    } catch (Exception e) {
-        System.out.println("Error display: " + e.getMessage());
-    }
-
-
     }
 
     private void changeOrderStatus(String newStatus) {
         int rowIndex = jTable1.getSelectedRow();
-        
         if (rowIndex < 0) {
-            JOptionPane.showMessageDialog(null, "Please select the order from the table first!");
+            JOptionPane.showMessageDialog(null, "Please select an order!");
             return;
         }
-        
+
         TableModel model = jTable1.getModel();
-        String id = model.getValueAt(rowIndex, 0).toString(); 
-        
-        int confirm = JOptionPane.showConfirmDialog(null, "Are you sure you want to " + newStatus + " this?", "Confirmation", JOptionPane.YES_NO_OPTION);
-        
-        if (confirm == JOptionPane.YES_OPTION) {
-            // Gamiton nato ang updateRecord gikan sa imong config class
-            String sql = "UPDATE OrdersTable SET order_status = ? WHERE o_id = ?";
-            
+        String id = model.getValueAt(rowIndex, 0).toString();
+        String name = model.getValueAt(rowIndex, 1).toString();
+        String item = model.getValueAt(rowIndex, 4).toString();
+        String total = model.getValueAt(rowIndex, 5).toString();
+
+        if (JOptionPane.showConfirmDialog(null, "Set as " + newStatus + "?", "Confirm", 0) == 0) {
             try {
-                conf.updateRecord(sql, newStatus, id);
-                JOptionPane.showMessageDialog(null, "Order Successfully " + newStatus);
-               displayOrders(); 
-        
-            transactions.displayTransactions();
+                // I-update ang status
+                conf.updateRecord("UPDATE OrdersTable SET order_status = ? WHERE o_id = ?", newStatus, id);
+
+                // --- KINI ANG SAKTO NGA QUERY ---
+                String unitPrice = "0.00";
+                String cleanItem = item.split(" ")[0]; // Kuhaon ang "WINGS" gikan sa "WINGS (x2)"
                 
-                
+                // Giusab nako gikan sa p_name ngadto sa p_item
+                String sql = "SELECT p_price FROM masterlist WHERE p_item LIKE '" + cleanItem + "%'";
+                ResultSet rs = conf.getData(sql);
+                if (rs.next()) {
+                    unitPrice = rs.getString("p_price");
+                }
+
+                // 8 ka parameters na ni
+                Receipt rec = new Receipt(id, name, item, total, "0.00", "0.00", newStatus, unitPrice);
+                rec.setVisible(true);
+
+                displayOrders();
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
+                System.out.println("Error: " + e.getMessage());
             }
         }
     }
-    
-
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {

@@ -1,4 +1,3 @@
-
 package admin;
 
 import config.config; 
@@ -7,26 +6,20 @@ import java.sql.SQLException;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
-
-
 public class masterlist extends javax.swing.JFrame {
 
-public masterlist() {
+    public masterlist() {
         initComponents();
         this.setLocationRelativeTo(null);
-        
-        // I-load ang tanang data inig sugod (empty string para walay filter)
         displayData(""); 
     }
 
-    // Giusab nato kini: Nagdawat na siya og "String keyword"
     public void displayData(String keyword) {
         config conf = new config();
         DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
-        model.setRowCount(0); // I-clear ang table sa dili pa mo-load
+        model.setRowCount(0); 
 
         try {
-            // SQL query nga naay LIKE para sa search functionality
             String sql = "SELECT * FROM masterlist WHERE p_item LIKE '%" + keyword + "%'";
             ResultSet rs = conf.getData(sql);
 
@@ -40,11 +33,6 @@ public masterlist() {
         } catch (SQLException e) {
             System.out.println("Error Loading Data: " + e.getMessage());
         }
-    }
-
-    // Overloaded method para sa mga karaan nga tawag nga walay parameter
-    public void displayData() {
-        displayData("");
     }
     
     
@@ -164,45 +152,48 @@ public masterlist() {
     }// </editor-fold>//GEN-END:initComponents
 
     private void addActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addActionPerformed
-     String name = JOptionPane.showInputDialog(this, "Enter Product Name:");
-        String qty = JOptionPane.showInputDialog(this, "Enter Quantity:");
-        String price = JOptionPane.showInputDialog(this, "Enter Price:");
-        
-        if (name != null && !name.isEmpty() && qty != null && price != null) {
-            config conf = new config();
-            String sql = "INSERT INTO masterlist (p_item, p_quantity, p_price) VALUES (?, ?, ?)";
-            conf.addRecord(sql, name, qty, price);
-            displayData(""); 
-        }
+     addmasterlist aml = new addmasterlist();
+        aml.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_addActionPerformed
 
     private void updateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateActionPerformed
       int row = jTable1.getSelectedRow();
-        if (row != -1) {
-            String name = jTable1.getValueAt(row, 0).toString();
-            String currentQty = jTable1.getValueAt(row, 1).toString();
-            String currentPrice = jTable1.getValueAt(row, 2).toString();
-            
-            String newQty = JOptionPane.showInputDialog(this, "Update Quantity:", currentQty);
-            String newPrice = JOptionPane.showInputDialog(this, "Update Price:", currentPrice);
-            
-            if (newQty != null && newPrice != null) {
-                config conf = new config();
-                String sql = "UPDATE masterlist SET p_quantity = ?, p_price = ? WHERE p_item = ?";
-                conf.updateRecord(sql, newQty, newPrice, name);
-                displayData(""); 
-            }
-        } else {
-            JOptionPane.showMessageDialog(this, "Pili una og row!");
-        }
-    
+    if (row != -1) {
+        // 1. Paghimo og instance sa addmasterlist frame
+        addmasterlist aml = new addmasterlist();
+        
+        // 2. Kuhaa ang data gikan sa table
+        String name = jTable1.getValueAt(row, 0).toString();
+        String qty = jTable1.getValueAt(row, 1).toString();
+        String prc = jTable1.getValueAt(row, 2).toString();
+        
+        // 3. I-set ang text sa fields sa addmasterlist (Diri ang error basta private ang fields)
+        aml.productname.setText(name);
+        aml.quantity.setText(qty);
+        aml.price.setText(prc);
+        
+        // 4. Usba ang label para mahibaw-an sa Save button nga UPDATE kini
+        aml.jLabel1.setText("UPDATE ITEM");
+        
+        // 5. I-disable ang productname field kung mao ni imong ID/Primary Key
+        aml.productname.setEditable(false); 
+        
+        // 6. I-pakita ang frame
+        aml.setVisible(true);
+        this.dispose();
+    } else {
+        JOptionPane.showMessageDialog(this, "Please select a row to update!" );
+    }
+
+        
     }//GEN-LAST:event_updateActionPerformed
 
     private void deleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteActionPerformed
-      int row = jTable1.getSelectedRow();
+     int row = jTable1.getSelectedRow();
         if (row != -1) {
             String name = jTable1.getValueAt(row, 0).toString();
-            int confirm = JOptionPane.showConfirmDialog(this, "I-delete ang " + name + "?", "Confirm", JOptionPane.YES_NO_OPTION);
+            int confirm = JOptionPane.showConfirmDialog(this, "Delete  " + name + "?", "Confirm", JOptionPane.YES_NO_OPTION);
             
             if (confirm == JOptionPane.YES_OPTION) {
                 config conf = new config();
@@ -211,18 +202,23 @@ public masterlist() {
                 displayData(""); 
             }
         } else {
-            JOptionPane.showMessageDialog(this, "Pili una og row!");
+            JOptionPane.showMessageDialog(this, "Select a row first!");
         }
+                                           
+
+
+    
     }//GEN-LAST:event_deleteActionPerformed
 
     private void saveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveActionPerformed
-        displayData(""); 
+       displayData(""); 
         search.setText(""); 
         JOptionPane.showMessageDialog(this, "Table Refreshed!");
+    
     }//GEN-LAST:event_saveActionPerformed
 
     private void backActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backActionPerformed
-       new admindashboard().setVisible(true);
+      new admindashboard().setVisible(true);
         this.dispose();
     }//GEN-LAST:event_backActionPerformed
 

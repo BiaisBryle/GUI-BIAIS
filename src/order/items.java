@@ -1,4 +1,3 @@
-
 package order;
 
 import javax.swing.JOptionPane;
@@ -8,51 +7,52 @@ import javax.swing.event.TableModelListener;
 import config.config;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class items extends javax.swing.JFrame {
 
     DefaultTableModel model;
     private addorders mainFrame;
+    private String currentSelectedItems; // Sudlanan sa karaan nga selection
 
-    public items(addorders mainFrame) {
+    // Gidugangan og 'preSelected' parameter ang constructor
+    public items(addorders mainFrame, String preSelected) {
         this.mainFrame = mainFrame;
+        this.currentSelectedItems = preSelected; 
         initComponents();
         setupTable();
-        loadItemsFromDB();
+        loadItemsFromDB(); 
+        
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         this.setLocationRelativeTo(null);
     }
 
     private void setupTable() {
-        // Columns: 0:Name, 1:Price, 2:Select, 3:Quantity, 4:Stock (Hidden Column)
         String[] columns = {"Item Name", "Price", "Select", "Quantity", "Available Stock"};
         model = new DefaultTableModel(columns, 0) {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
-                if (columnIndex == 2) return Boolean.class; // Checkbox
-                if (columnIndex == 1) return Double.class;  // Price
-                if (columnIndex == 3 || columnIndex == 4) return Integer.class; // Qty & Stock
+                if (columnIndex == 2) return Boolean.class; 
+                if (columnIndex == 1) return Double.class;  
+                if (columnIndex == 3 || columnIndex == 4) return Integer.class; 
                 return super.getColumnClass(columnIndex);
             }
 
             @Override
             public boolean isCellEditable(int row, int column) {
-                // Checkbox (2) ug Quantity (3) ra ang pwedeng usbon sa user
                 return column == 2 || column == 3;
             }
         };
         jTable3.setModel(model);
 
-        // I-hide ang 'Available Stock' column (Index 4) para dili makit-an sa user
         jTable3.getColumnModel().getColumn(4).setMinWidth(0);
         jTable3.getColumnModel().getColumn(4).setMaxWidth(0);
         jTable3.getColumnModel().getColumn(4).setPreferredWidth(0);
 
-        // Listener para sa automatic calculation ug stock validation
         model.addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
-                // Kon ang checkbox (2) o quantity (3) ang gi-usab
                 if (e.getColumn() == 2 || e.getColumn() == 3) {
                     calculateGrandTotal();
                 }
@@ -63,20 +63,42 @@ public class items extends javax.swing.JFrame {
     private void loadItemsFromDB() {
         config conf = new config();
         try {
-            // Naggamit og 'p_quantity' base sa imong database column
             String sql = "SELECT p_item, p_price, p_quantity FROM masterlist";
             ResultSet rs = conf.getData(sql);
 
             model.setRowCount(0);
             while (rs.next()) {
+                String itemName = rs.getString("p_item");
+                double price = rs.getDouble("p_price");
+                int stock = rs.getInt("p_quantity");
+
+                // --- LOGIC PARA SA RE-CHECK ---
+                boolean isChecked = false;
+                int existingQty = 0;
+
+                if (currentSelectedItems != null && !currentSelectedItems.isEmpty()) {
+                    if (currentSelectedItems.contains(itemName)) {
+                        isChecked = true;
+                        // Extract quantity gamit ang regex: "Item Name (x5)" -> 5
+                        try {
+                            Pattern p = Pattern.compile(Pattern.quote(itemName) + " \\(x(\\d+)\\)");
+                            Matcher m = p.matcher(currentSelectedItems);
+                            if (m.find()) {
+                                existingQty = Integer.parseInt(m.group(1));
+                            }
+                        } catch (Exception e) { existingQty = 1; }
+                    }
+                }
+
                 model.addRow(new Object[]{
-                    rs.getString("p_item"), 
-                    rs.getDouble("p_price"), 
-                    false, 
-                    0, 
-                    rs.getInt("p_quantity") // I-save ang stock limit diri
+                    itemName, 
+                    price, 
+                    isChecked,   // I-set ang checkbox
+                    existingQty, // I-set ang quantity
+                    stock 
                 });
             }
+            calculateGrandTotal(); // I-calculate dayon ang total inig abli
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Error loading items: " + e.getMessage());
         }
@@ -89,17 +111,16 @@ public class items extends javax.swing.JFrame {
 
             if (isSelected) {
                 double price = (double) model.getValueAt(i, 1);
-                int stockAvailable = (int) model.getValueAt(i, 4); // Stock gikan sa DB
+                int stockAvailable = (int) model.getValueAt(i, 4);
                 int qty = 0;
 
                 try {
                     qty = Integer.parseInt(model.getValueAt(i, 3).toString());
                     
-                    // --- STOCK VALIDATION ---
                     if (qty > stockAvailable) {
                         JOptionPane.showMessageDialog(this, 
-                            "Insufficient stock! Only " +  model.getValueAt(i, 0) + " 'units of " + stockAvailable + " are available. ");
-                        model.setValueAt(stockAvailable, i, 3); // I-reset sa max stock
+                            "Insufficient stock! " + model.getValueAt(i, 0) + " has only " + stockAvailable + " left.");
+                        model.setValueAt(stockAvailable, i, 3); 
                         qty = stockAvailable;
                     }
                     if (qty < 0) {
@@ -109,7 +130,6 @@ public class items extends javax.swing.JFrame {
                 } catch (Exception e) {
                     qty = 0;
                 }
-
                 grandTotal += (price * qty);
             }
         }
@@ -238,27 +258,37 @@ public class items extends javax.swing.JFrame {
         config conf = new config();
         model.setRowCount(0); 
         try {
-            // Updated SQL to include p_quantity for search results
             String sql = "SELECT p_item, p_price, p_quantity FROM masterlist WHERE p_item LIKE '%" + query + "%'";
             ResultSet rs = conf.getData(sql);
             while (rs.next()) {
-                model.addRow(new Object[]{
-                    rs.getString("p_item"), 
-                    rs.getDouble("p_price"), 
-                    false, 
-                    0, 
-                    rs.getInt("p_quantity")
-                });
+                String itemName = rs.getString("p_item");
+                double price = rs.getDouble("p_price");
+                int stock = rs.getInt("p_quantity");
+
+                // I-apply gihapon ang re-check maski sa search
+                boolean isChecked = false;
+                int existingQty = 0;
+                if (currentSelectedItems != null && currentSelectedItems.contains(itemName)) {
+                    isChecked = true;
+                    try {
+                        Pattern p = Pattern.compile(Pattern.quote(itemName) + " \\(x(\\d+)\\)");
+                        Matcher m = p.matcher(currentSelectedItems);
+                        if (m.find()) existingQty = Integer.parseInt(m.group(1));
+                    } catch (Exception e) { existingQty = 1; }
+                }
+
+                model.addRow(new Object[]{ itemName, price, isChecked, existingQty, stock });
             }
         } catch (SQLException e) {
             System.out.println("Search error: " + e.getMessage());
         }
     
+    
     }//GEN-LAST:event_searchKeyReleased
 
     private void addtoorderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addtoorderActionPerformed
      StringBuilder selectedItems = new StringBuilder();
-        double grandTotal = 0.0;
+        double total = 0.0;
         boolean hasSelection = false;
 
         if (jTable3.isEditing()) {
@@ -280,37 +310,36 @@ public class items extends javax.swing.JFrame {
                 if (qty > 0) {
                     hasSelection = true;
                     selectedItems.append(itemName).append(" (x").append(qty).append("), ");
-                    grandTotal += (price * qty);
+                    total += (price * qty);
                 }
             }
         }
 
         if (!hasSelection) {
-            JOptionPane.showMessageDialog(this, "Palihug pag-pili og item ug butangi og quantity.");
+            JOptionPane.showMessageDialog(this, "Please select an item and enter quantity.");
             return;
         }
 
-        String finalItemsString = selectedItems.toString();
-        if (finalItemsString.endsWith(", ")) {
-            finalItemsString = finalItemsString.substring(0, finalItemsString.length() - 2);
+        String finalString = selectedItems.toString();
+        if (finalString.endsWith(", ")) {
+            finalString = finalString.substring(0, finalString.length() - 2);
         }
 
         if (mainFrame != null) {
-            mainFrame.setSelectedItems(finalItemsString, grandTotal);
-            this.dispose();
+            mainFrame.setSelectedItems(finalString, total);
+            this.dispose(); 
         }
-
+    
     
     }//GEN-LAST:event_addtoorderActionPerformed
 
     private void BackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BackActionPerformed
-     new addorders().setVisible(true);
-        this.dispose();
+this.dispose();
     }//GEN-LAST:event_BackActionPerformed
 
     public static void main(String args[]) {
-     java.awt.EventQueue.invokeLater(() -> {
-            new items(null).setVisible(true);
+        java.awt.EventQueue.invokeLater(() -> {
+            new items(null, "").setVisible(true);
         });
     }
 

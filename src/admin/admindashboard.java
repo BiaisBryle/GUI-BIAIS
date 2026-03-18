@@ -40,7 +40,7 @@ public admindashboard() {
         jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/logo small.PNG"))); // NOI18N
-        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 70, 307, 310));
+        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 80, 340, 190));
 
         home.setBackground(new java.awt.Color(153, 153, 153));
         home.setText("HOME");

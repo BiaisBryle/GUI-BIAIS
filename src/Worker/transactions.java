@@ -1,59 +1,131 @@
-
 package Worker;
 
 import config.Session;
 import config.config;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 
 public class transactions extends javax.swing.JFrame {
 
-  config conf = new config();
+    config conf = new config();
     String currentworker = "";
     
-    // Static reference sa frame para ma-access sa uban class
+    // Static reference para ma-refresh ang table gikan sa laing frames
     public static transactions instance;
 
     public transactions() {
         initComponents();
         this.setLocationRelativeTo(null);
-        // Get the worker name from the Session
         this.currentworker = Session.getInstance().getName();
         
-        instance = this; // I-set ang instance diri
+        instance = this; 
         displayTransactions();
+
+        // --- MOUSE LISTENER PARA SA DOUBLE CLICK ---
+        jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTable1MouseClicked(evt);
+            }
+        });
     }
 
-    // Gihimo natong static para ma-call sa worder class
+    public static void displayTransactions() {
+        if (instance != null) {
+            try {
+                int workerId = Session.getInstance().getId(); 
+                String searchTerm = instance.search.getText().trim();
+                
+                if (workerId == 0) {
+                    System.out.println("No worker logged in or ID is 0.");
+                    return;
+                }
 
-       // Gihimo natong static para ma-call sa worker class
-public static void displayTransactions() {
-    if (instance != null) {
-        try {
-            // --- FIX: Get the ID as an int, not a String ---
-            int workerId = Session.getInstance().getId(); 
-            String searchTerm = instance.search.getText().trim();
-            
-            // Check if workerId is 0 (default value if not set) instead of null
-            if (workerId == 0) {
-                System.out.println("No worker logged in or ID is 0.");
-                return;
+                // Gi-include ang order_status sa SQL query
+                String sql = "SELECT o_id, customer_name, item, total_amount, order_status " +
+                             "FROM OrdersTable WHERE worker_id = " + workerId + " " +
+                             "AND order_status != 'Pending' " + 
+                             "AND (customer_name LIKE '%" + searchTerm + "%' " +
+                             "OR item LIKE '%" + searchTerm + "%' " +
+                             "OR order_status LIKE '%" + searchTerm + "%')";
+                
+                // 1. I-load ang data gamit ang config class
+                config.displayData(sql, instance.jTable1);
+                
+                // 2. I-lock ang table para dili ma-edit ang cells (Non-editable model)
+                TableModel model = instance.jTable1.getModel();
+                DefaultTableModel nonEditableModel = new DefaultTableModel() {
+                    @Override
+                    public boolean isCellEditable(int row, int column) {
+                        return false; 
+                    }
+                };
+
+                for (int i = 0; i < model.getColumnCount(); i++) {
+                    nonEditableModel.addColumn(model.getColumnName(i));
+                }
+
+                for (int i = 0; i < model.getRowCount(); i++) {
+                    Object[] rowData = new Object[model.getColumnCount()];
+                    for (int j = 0; j < model.getColumnCount(); j++) {
+                        rowData[j] = model.getValueAt(i, j);
+                    }
+                    nonEditableModel.addRow(rowData);
+                }
+
+                instance.jTable1.setModel(nonEditableModel);
+                
+            } catch (Exception e) {
+                System.out.println("Error loading transactions: " + e.getMessage());
             }
+        } 
+    }
 
-            // --- FIX: SQL query does not need quotes for an integer ID ---
-            String sql = "SELECT o_id, customer_name, item, total_amount, order_status " +
-                         "FROM OrdersTable WHERE worker_id = " + workerId + " " +
-                         "AND order_status != 'Pending' " + 
-                         "AND (customer_name LIKE '%" + searchTerm + "%' " +
-                         "OR item LIKE '%" + searchTerm + "%' " +
-                         "OR order_status LIKE '%" + searchTerm + "%')";
-            
-            config.displayData(sql, instance.jTable1);
-            
-        } catch (Exception e) {
-            System.out.println("Error loading transactions: " + e.getMessage());
+    // --- KINI NGA METHOD ANG MO-HANDLE SA DOUBLE CLICK PARA VIEW RECEIPT ---
+    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {                                     
+      if (evt.getClickCount() == 2) { 
+            int rowIndex = jTable1.getSelectedRow();
+            if (rowIndex >= 0) {
+                TableModel model = jTable1.getModel();
+                
+         
+                
+                String id = model.getValueAt(rowIndex, 0).toString();      
+                String name = model.getValueAt(rowIndex, 1).toString();    
+                String item = model.getValueAt(rowIndex, 2).toString();    
+                String total = model.getValueAt(rowIndex, 3).toString();   
+                String status = model.getValueAt(rowIndex, 4).toString();  
+                
+                String unitPrice = "0.00";
+                
+                try {
+                    // Limpyohan ang item name (kuhaon lang ang text sa dili pa ang space/parenthesis)
+                    String cleanItem = item.trim();
+                    if (cleanItem.contains(" ")) {
+                        cleanItem = cleanItem.split(" ")[0];
+                    }
+
+                    // Siguroha nga husto ang 'p_item' ug 'p_price' base sa imong masterlist table
+                    String sql = "SELECT p_price FROM masterlist WHERE p_item LIKE '" + cleanItem + "%'";
+                    java.sql.ResultSet rs = conf.getData(sql);
+                    
+                    if (rs != null && rs.next()) {
+                        unitPrice = rs.getString("p_price");
+                    } else {
+                        // Kung walay nakit-an sa masterlist, gamita ang total isip fallback
+                        unitPrice = total; 
+                    }
+                } catch (Exception e) {
+                    System.out.println("Fetch Price Error: " + e.getMessage());
+                    unitPrice = total; 
+                }
+
+                // I-open ang Receipt (Siguroha nga 8 parameters kini)
+                Worker.Receipt rec = new Worker.Receipt(id, name, item, total, "0.00", "0.00", status, unitPrice);
+                rec.setVisible(true);
+            }
         }
-    } 
-} // <--- Added closing brace for the method
+    }
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -167,11 +239,9 @@ public static void displayTransactions() {
        displayTransactions();
     }//GEN-LAST:event_searchKeyReleased
 
-    public static void main(String args[]) {
-       java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new transactions().setVisible(true);
-            }
+   public static void main(String args[]) {
+        java.awt.EventQueue.invokeLater(() -> {
+            new transactions().setVisible(true);
         });
     }
 

@@ -1,4 +1,3 @@
-
 package order;
 
 import admin.admindashboard;
@@ -9,8 +8,8 @@ import config.config;
 import javax.swing.JOptionPane;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
-
 
 public class orders extends javax.swing.JFrame {
 
@@ -22,22 +21,44 @@ public class orders extends javax.swing.JFrame {
     
     public void displayTable() {
         String searchTerm = jTextField1.getText(); 
-        // SQL Query: Gi-update aron maapil ang tanang columns (item, quantity, etc.)
-        String sql = "SELECT o_id, customer_name, address, item, total_amount, order_status, worker_id, order_date FROM OrdersTable "
-                   + "WHERE customer_name LIKE '%" + searchTerm + "%' "
-                   + "OR address LIKE '%" + searchTerm + "%' "
-                   + "OR o_id LIKE '%" + searchTerm + "%' "
-                   + "OR item LIKE '%" + searchTerm + "%'";
+        String sql = "SELECT o_id, customer_name, phone_number, address, item, total_amount, order_status, worker_id, order_date FROM OrdersTable "
+               + "WHERE customer_name LIKE '%" + searchTerm + "%' "
+               + "OR address LIKE '%" + searchTerm + "%' "
+               + "OR o_id LIKE '%" + searchTerm + "%' ";
 
         try {
             config conf = new config(); 
-            // Ang imong config class kinahanglan naay method para sa pag-display sa data sa JTable
             conf.displayData(sql, OrdersTable); 
+            
+            // --- KINI NGA PART ANG MO-LOCK SA TABLE ---
+            TableModel model = OrdersTable.getModel();
+            DefaultTableModel nonEditableModel = new DefaultTableModel() {
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false; // Dili ma-edit ang cells
+                }
+            };
+
+            // I-copy ang headers
+            for (int i = 0; i < model.getColumnCount(); i++) {
+                nonEditableModel.addColumn(model.getColumnName(i));
+            }
+
+            // I-copy ang data
+            for (int i = 0; i < model.getRowCount(); i++) {
+                Object[] rowData = new Object[model.getColumnCount()];
+                for (int j = 0; j < model.getColumnCount(); j++) {
+                    rowData[j] = model.getValueAt(i, j);
+                }
+                nonEditableModel.addRow(rowData);
+            }
+
+            OrdersTable.setModel(nonEditableModel);
+
         } catch (Exception e) {
             System.out.println("Error displaying data: " + e.getMessage());
         }
     }
-
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -153,6 +174,11 @@ public class orders extends javax.swing.JFrame {
 
             }
         ));
+        OrdersTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                OrdersTableMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(OrdersTable);
 
         search.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 110, 350, 270));
@@ -191,13 +217,12 @@ public class orders extends javax.swing.JFrame {
     }//GEN-LAST:event_addActionPerformed
 
     private void jTextField1KeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextField1KeyReleased
-      displayTable(); // Calls the search logic every time you type
+      displayTable();
     
     }//GEN-LAST:event_jTextField1KeyReleased
 
     private void updateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateActionPerformed
        int rowIndex = OrdersTable.getSelectedRow();
-
     if(rowIndex < 0){
         JOptionPane.showMessageDialog(null, "Please select a row from the table!");
     } else {
@@ -206,8 +231,9 @@ public class orders extends javax.swing.JFrame {
             TableModel model = OrdersTable.getModel();
             String id = model.getValueAt(rowIndex, 0).toString();
             
-            // Siguroha nga ang column index 5 mao ang status (o_id=0, name=1, address=2, item=3, total=4, status=5, worker=6, date=7)
-            String status = model.getValueAt(rowIndex, 5).toString();
+            // Atong i-check ang status (Note: Na-move ang index sa status kay nagdugang tag column sa SELECT)
+            // Sa bag-ong SELECT sa ibabaw, ang status naa na sa index 6
+            String status = model.getValueAt(rowIndex, 6).toString(); 
 
             if(status.equalsIgnoreCase("Delivered")){
                 JOptionPane.showMessageDialog(null, "This order cannot be updated because it has already been DELIVERED!", "Warning", JOptionPane.WARNING_MESSAGE);
@@ -215,32 +241,21 @@ public class orders extends javax.swing.JFrame {
             }
 
             ResultSet rs = conf.getData("SELECT * FROM OrdersTable WHERE o_id = '" + id + "'");
-            
             if(rs.next()){
                 addorders addFrame = new addorders();
                 
-              
+                // KINI ANG IMPORTANTE: I-set ang phone number field
                 addFrame.customername.setText(rs.getString("customer_name"));
-                addFrame.phonenumber.setText(rs.getString("phone_number"));
+                addFrame.phonenumber.setText(rs.getString("phone_number")); // Siguroha nga 'phonenumber' ang name sa field sa addorders
                 addFrame.address.setText(rs.getString("address"));
                 addFrame.totalammount.setText(rs.getString("total_amount"));
                 addFrame.orderstatus.setText(rs.getString("order_status"));
                 addFrame.date.setText(rs.getString("order_date"));
                 
-                // I-load ang mga items ug worker
-                addFrame.setSelectedItems(rs.getString("item"), rs.getDouble("total_amount"));
+                // I-save ang current ID para UPDATE ang mahitabo, dili INSERT
+                addFrame.currentOrderId = Integer.parseInt(id); 
                 
-                String currentWorkerName = rs.getString("worker").trim();
-
-                for (int i = 0; i < addFrame.assignworker.getItemCount(); i++) {
-                    Object item = addFrame.assignworker.getItemAt(i);
-                    if (item instanceof WorkerItem) {
-                        if (((WorkerItem) item).name.equals(currentWorkerName)) {
-                            addFrame.assignworker.setSelectedIndex(i);
-                            break;
-                        }
-                    }
-                }
+                addFrame.setSelectedItems(rs.getString("item"), rs.getDouble("total_amount"));
                 
                 addFrame.save.setText("Update");
                 addFrame.setVisible(true);
@@ -251,48 +266,31 @@ public class orders extends javax.swing.JFrame {
         }
     }
 
+
     
     }//GEN-LAST:event_updateActionPerformed
     
     private void deleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteActionPerformed
      int rowIndex = OrdersTable.getSelectedRow();
-
-    if(rowIndex < 0){
-        JOptionPane.showMessageDialog(null, "Please select a row to delete!");
-    } else {
-        try {
-            config conf = new config();
-            TableModel model = OrdersTable.getModel();
-            
-            String id = model.getValueAt(rowIndex, 0).toString();
-           
-            String query = "SELECT item, quantity FROM OrdersTable WHERE o_id = '" + id + "'";
-            ResultSet rs = conf.getData(query);
-            
-            if(rs.next()){
-                String itemName = rs.getString("item");
-                int qtyToReturn = rs.getInt("quantity");
-
-                int response = JOptionPane.showConfirmDialog(null, 
-                    "Are you sure you want to delete this?\nStocks will be returned: " + qtyToReturn + " of " + itemName + ".", 
-                    "Confirm Delete", JOptionPane.YES_NO_OPTION);
-
+        if(rowIndex < 0){
+            JOptionPane.showMessageDialog(null, "Please select a row to delete!");
+        } else {
+            try {
+                config conf = new config();
+                TableModel model = OrdersTable.getModel();
+                String id = model.getValueAt(rowIndex, 0).toString();
+                
+                int response = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete this?", "Confirm", JOptionPane.YES_NO_OPTION);
                 if(response == JOptionPane.YES_OPTION){
-                    // A. I-ADD BALIK ANG STOCK
-                    String updateStockSql = "UPDATE masterlist SET p_quantity = p_quantity + ? WHERE p_item = ?";
-                    conf.updateRecord(updateStockSql, qtyToReturn, itemName);
-
-                    // B. I-DELETE ANG RECORD
                     conf.deleteRecord("DELETE FROM OrdersTable WHERE o_id = ?", id);
-
-                    JOptionPane.showMessageDialog(null, "Order deleted and stocks have been returned!");
                     displayTable(); 
                 }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
             }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
         }
-    }
+    
+    
     }//GEN-LAST:event_deleteActionPerformed
 
     private void homeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_homeActionPerformed
@@ -326,9 +324,49 @@ public class orders extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 
-    /**
-     * @param args the command line arguments
-     */
+    private void OrdersTableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_OrdersTableMouseClicked
+                                     
+   if (evt.getClickCount() == 2) { 
+            int rowIndex = OrdersTable.getSelectedRow();
+            if (rowIndex >= 0) {
+                TableModel model = OrdersTable.getModel();
+                
+                String id = model.getValueAt(rowIndex, 0).toString();      
+                String name = model.getValueAt(rowIndex, 1).toString();    
+                String item = model.getValueAt(rowIndex, 4).toString();    
+                String total = model.getValueAt(rowIndex, 5).toString();   
+                String status = model.getValueAt(rowIndex, 6).toString();  
+                
+                String unitPrice = "0.00";
+
+                try {
+                    config conf = new config();
+                    String cleanItemName = item.split(" ")[0]; 
+                    
+                    // --- KANI NGA LINE ANG USBA ---
+                    // Giusab nako gikan sa p_name ngadto sa p_item
+                    String query = "SELECT p_price FROM masterlist WHERE p_item LIKE '" + cleanItemName + "%'";
+                    ResultSet rs = conf.getData(query);
+                    
+                    if (rs.next()) {
+                        unitPrice = rs.getString("p_price");
+                    } else {
+                        unitPrice = total; // Fallback kung walay nakit-an
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error fetching unit price: " + e.getMessage());
+                    unitPrice = total;
+                }
+
+                // I-pasa ang 8 parameters sa Receipt
+                Worker.Receipt rec = new Worker.Receipt(id, name, item, total, "0.00", "0.00", status, unitPrice);
+                rec.setVisible(true);
+            }
+        }
+    
+    
+    }//GEN-LAST:event_OrdersTableMouseClicked
+
     public static void main(String args[]) {
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -340,8 +378,9 @@ public class orders extends javax.swing.JFrame {
         } catch (Exception ex) {
             java.util.logging.Logger.getLogger(orders.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-
-        
+        java.awt.EventQueue.invokeLater(() -> {
+            new orders().setVisible(true);
+        });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

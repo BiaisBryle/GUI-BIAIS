@@ -150,32 +150,47 @@ import javax.swing.JOptionPane;
     }//GEN-LAST:event_jTextField2ActionPerformed
 
     private void jLabel6MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel6MouseClicked
-       String fname = jTextField2.getText().trim();
-        String lname = jTextField3.getText().trim();
-        String email = jTextField4.getText().trim();
-        String pass  = jTextField5.getText().trim();
+                                  
+    String fname = jTextField2.getText().trim();
+    String lname = jTextField3.getText().trim();
+    String email = jTextField4.getText().trim();
+    String pass  = jTextField5.getText().trim();
 
-        // VALIDATION: Dili na kailangan i-check ang role kay automatic worker na
-        if (fname.isEmpty() || lname.isEmpty() || email.isEmpty() || pass.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please fill all fields!");
-            return;
+    if (fname.isEmpty() || lname.isEmpty() || email.isEmpty() || pass.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "Please fill all fields!");
+        return;
+    }
+
+    try {
+        config conf = new config();
+        
+        // 1. Check if there are any users in the table
+        String checkSql = "SELECT COUNT(*) FROM user";
+        int count = conf.getSingleValue(checkSql); // Assuming your config has a method to get a single integer
+
+        String role;
+        String status;
+
+        // 2. Determine Role and Status
+        if (count == 0) {
+            role = "Admin";
+            status = "Approved"; // Admins are usually auto-approved
+        } else {
+            role = "worker";
+            status = "Pending";  // Workers wait for Admin approval
         }
 
-        try {
-            // SQL: Diretso na "worker" ang role ug "approved" ang status para magamit dayon
-            // O kung gusto nimo nga i-approve pa sa admin, usba ang "approved" sa "Pending"
-            String sql = "INSERT INTO user (u_name, u_lname, u_email, u_pass, u_status, u_role) VALUES (?, ?, ?, ?, ?, ?)";
-            config conf = new config();
-            
-            // AUTOMATIC VALUES: Status = "approved", Role = "worker"
-            conf.addRecord(sql, fname, lname, email, pass, "Pending", "worker");
+        // 3. Insert the record
+        String sql = "INSERT INTO user (u_name, u_lname, u_email, u_pass, u_status, u_role) VALUES (?, ?, ?, ?, ?, ?)";
+        conf.addRecord(sql, fname, lname, email, pass, status, role);
 
-            JOptionPane.showMessageDialog(this, "Registered Successfully as Worker!");
-            clearFields();
+        JOptionPane.showMessageDialog(this, "Registered Successfully as " + role + "!");
+        clearFields();
 
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
-        }
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
+    }
+
     
     }//GEN-LAST:event_jLabel6MouseClicked
 

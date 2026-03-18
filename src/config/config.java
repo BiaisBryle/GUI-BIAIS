@@ -112,4 +112,28 @@ public class config {
         }
         return false;
     }
+    
+    
+    
+    
+    public int getSingleValue(String sql) {
+    int count = 0;
+    try (Connection conn = connectDB();
+         PreparedStatement pstmt = conn.prepareStatement(sql);
+         ResultSet rs = pstmt.executeQuery()) {
+        
+        if (rs.next()) {
+            count = rs.getInt(1);
+        }
+    } catch (SQLException e) {
+        System.err.println("Error getting single value: " + e.getMessage());
+    }
+    return count;
+}
+    
+    
+    
+    
+    
+    
 }

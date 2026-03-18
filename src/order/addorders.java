@@ -1,4 +1,3 @@
-
 package order;
 
 import config.config;
@@ -9,6 +8,7 @@ import javax.swing.DefaultComboBoxModel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+// Helper class para sa Worker Dropdown
 class WorkerItem {
     int id;
     String name;
@@ -20,7 +20,6 @@ class WorkerItem {
 
     @Override
     public String toString() {
-        // MAO NI ANG MAKITA SA DROPDOWN: ID ug Name
         return id + " - " + name; 
     }
 
@@ -29,17 +28,18 @@ class WorkerItem {
     }
 }
 
-
 public class addorders extends javax.swing.JFrame {
-
+    public int currentOrderId = 0; // 0 means NEW order, >0 means EDITing existing order
     private String selectedItemsList = "";
-
+    private items itemsFrame; 
+    
     public addorders() {
         initComponents();
         this.setLocationRelativeTo(null);
         
-        loadWorkers(); // Tawgon ang loadWorkers pag-start sa frame
+        loadWorkers(); 
         
+        // Setup defaults
         totalammount.setEditable(false);
         orderstatus.setText("Pending");
         orderstatus.setEditable(false);
@@ -47,11 +47,15 @@ public class addorders extends javax.swing.JFrame {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         date.setText(sdf.format(new Date()));
         date.setEditable(false);
+        
+        // Siguroha nga inig close sa window, dili ma-exit ang tibuok program
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
     }
 
     private void loadWorkers() {
         config conf = new config();
         try {
+            // Siguroha nga husto ang table name ug column names sa imong DB
             String sql = "SELECT u_id, u_name FROM user WHERE u_status = 'approved' AND u_role = 'worker'";
             ResultSet rs = conf.getData(sql);
             
@@ -68,13 +72,14 @@ public class addorders extends javax.swing.JFrame {
         }
     }
 
-    // Method to update item button text and total from items frame
+    // Method tawgon gikan sa items.java
     public void setSelectedItems(String itemsName, double total) {
         this.selectedItemsList = itemsName;
-        jButton1.setText("Items Selected"); // Change button text to indicate selection
+        jButton1.setText("Items Selected (" + String.format("%.2f", total) + ")"); 
         totalammount.setText(String.format("%.2f", total));
+        this.setEnabled(true); // I-re-enable ang main frame
+        this.toFront();        // Ibalhin sa atubangan ang addorders
     }
-
    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -325,7 +330,7 @@ public class addorders extends javax.swing.JFrame {
    config conf = new config();
         
         String name = customername.getText().trim();
-        String phone = phonenumber.getText().trim();
+        String phone = phonenumber.getText().trim(); 
         String addr = address.getText().trim();
         String total = totalammount.getText().trim();
         String d = date.getText().trim();
@@ -338,26 +343,33 @@ public class addorders extends javax.swing.JFrame {
             workerIdToSave = String.valueOf(((WorkerItem) selectedObj).getId());
         }
 
-        // Validate fields
-        if (name.isEmpty() || selectedItemsList.isEmpty() || workerIdToSave.equals("0") || total.equals("0.00") || total.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please fill out customer name, select items, and a worker!");
+        // Validation - Importante!
+        if (name.isEmpty() || selectedItemsList.isEmpty() || workerIdToSave.equals("0")) {
+            JOptionPane.showMessageDialog(this, "Please fill out all required fields (Name, Worker, and Items)!");
             return;
         }
 
         try {
-            String insertSql = "INSERT INTO OrdersTable (customer_name, phone_number, address, item, worker_id, total_amount, order_date, order_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            conf.addRecord(insertSql, name, phone, addr, selectedItemsList, workerIdToSave, total, d, status);
+            if (this.currentOrderId == 0) { 
+                // Siguroha nga husto ang table name `OrdersTable` sa imong DB
+                String insertSql = "INSERT INTO OrdersTable (customer_name, phone_number, address, item, worker_id, total_amount, order_date, order_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                conf.addRecord(insertSql, name, phone, addr, selectedItemsList, workerIdToSave, total, d, status);
+                JOptionPane.showMessageDialog(this, "Order Added Successfully!");
+            } else {
+                String updateSql = "UPDATE OrdersTable SET customer_name = ?, phone_number = ?, address = ?, item = ?, worker_id = ?, total_amount = ?, order_status = ? WHERE o_id = ?";
+                conf.updateRecord(updateSql, name, phone, addr, selectedItemsList, workerIdToSave, total, status, String.valueOf(this.currentOrderId));
+                JOptionPane.showMessageDialog(this, "Order Updated Successfully!");
+            }
 
-            JOptionPane.showMessageDialog(this, "Order Saved!");
-            
+            // Human og save, balik sa orders list
             new orders().setVisible(true);
+            if(itemsFrame != null) itemsFrame.dispose();
             this.dispose();
             
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
         }
     
-
     }//GEN-LAST:event_saveActionPerformed
 
     private void dateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dateActionPerformed
@@ -366,15 +378,16 @@ public class addorders extends javax.swing.JFrame {
 
     private void backActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backActionPerformed
      new orders().setVisible(true);
+        if(itemsFrame != null) itemsFrame.dispose(); 
         this.dispose();
-
+    
 
     }//GEN-LAST:event_backActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        items itemsFrame = new items(this);
-        itemsFrame.setVisible(true);
-        
+      itemsFrame = new items(this, selectedItemsList); 
+    itemsFrame.setVisible(true); 
+
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void assignworkerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_assignworkerActionPerformed
