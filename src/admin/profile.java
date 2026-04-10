@@ -165,11 +165,11 @@ public final class profile extends javax.swing.JFrame {
                 usertableActionPerformed(evt);
             }
         });
-        jPanel1.add(usertable, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 100, 120, 45));
+        jPanel1.add(usertable, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 150, 120, 45));
 
         profile.setBackground(new java.awt.Color(153, 153, 153));
         profile.setText("PROFILE");
-        jPanel1.add(profile, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 160, 120, 45));
+        jPanel1.add(profile, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 90, 120, 45));
 
         logout.setBackground(new java.awt.Color(153, 153, 153));
         logout.setText("LOG OUT");
